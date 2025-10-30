@@ -1,0 +1,640 @@
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Plus, Minus, Tag, Calculator, Receipt } from "lucide-react";
+
+const invoiceItemSchema = z.object({
+  type: z.enum(['product', 'service']),
+  productId: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  unitPrice: z.number().min(0, "Price must be positive"),
+  total: z.number(),
+  hasGst: z.boolean().default(false),
+  gstAmount: z.number().default(0),
+  hasWarranty: z.boolean().default(false),
+  warrantyCards: z.array(z.object({
+    url: z.string(),
+    filename: z.string(),
+    uploadedAt: z.string(),
+  })).optional().default([]),
+});
+
+const invoiceFormSchema = z.object({
+  items: z.array(invoiceItemSchema).min(1, "Add at least one item"),
+  couponCode: z.string().optional(),
+  notes: z.string().optional(),
+  terms: z.string().optional(),
+});
+
+type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
+
+interface InvoiceGenerationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  serviceVisit: any;
+}
+
+export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: InvoiceGenerationDialogProps) {
+  const { toast } = useToast();
+  const [couponValidation, setCouponValidation] = useState<any>(null);
+  const [calculatedTotals, setCalculatedTotals] = useState({
+    subtotal: 0,
+    discount: 0,
+    taxAmount: 0,
+    total: 0,
+  });
+  const [initialItemsSet, setInitialItemsSet] = useState(false);
+
+  const form = useForm<InvoiceFormValues>({
+    resolver: zodResolver(invoiceFormSchema),
+    defaultValues: {
+      items: [{
+        type: 'service' as const,
+        name: 'Service Charge',
+        quantity: 1,
+        unitPrice: 0,
+        total: 0,
+        hasGst: false,
+        gstAmount: 0,
+        hasWarranty: false,
+        warrantyCards: [],
+      }],
+      couponCode: '',
+      notes: '',
+      terms: 'Payment due within 30 days',
+    },
+  });
+
+  const { data: products = [] } = useQuery<any[]>({
+    queryKey: ['/api/products'],
+  });
+
+  const { data: suggestedProductsData, isLoading: loadingSuggestedProducts } = useQuery<{ products: any[] }>({
+    queryKey: ['/api/service-visits', serviceVisit?._id, 'suggested-products'],
+    enabled: open && !!serviceVisit?._id,
+  });
+
+  const items = form.watch('items');
+  const couponCode = form.watch('couponCode');
+
+  useEffect(() => {
+    if (!open) {
+      setInitialItemsSet(false);
+      setCouponValidation(null);
+      return;
+    }
+
+    if (initialItemsSet || loadingSuggestedProducts) {
+      return;
+    }
+
+    console.log('\n========================================');
+    console.log('📋 INVOICE DIALOG - Processing Products');
+    console.log('========================================');
+    console.log('Service Visit ID:', serviceVisit?._id);
+    console.log('Service Visit Vehicle:', serviceVisit?.vehicleReg);
+    console.log('Loading Suggested Products?', loadingSuggestedProducts);
+    console.log('Suggested Products Data:', suggestedProductsData);
+    console.log('Service Visit PartsUsed:', serviceVisit?.partsUsed);
+    console.log('Service Visit PartsUsed Count:', serviceVisit?.partsUsed?.length || 0);
+
+    // Build a map of productId -> fresh product data from suggested products
+    const freshProductMap = new Map();
+    console.log('\n🗺️ Building fresh product map from suggested products...');
+    suggestedProductsData?.products?.forEach((product: any, index: number) => {
+      console.log(`  Product ${index + 1}:`, {
+        productId: product.productId,
+        name: product.name,
+        price: product.price,
+        warranty: product.warranty,
+      });
+      freshProductMap.set(product.productId, {
+        name: product.name,
+        price: product.price || 0,
+        warranty: product.warranty,
+      });
+    });
+    console.log('Fresh product map size:', freshProductMap.size);
+
+    // Create partsUsedItems with fresh prices from the map
+    console.log('\n🔧 Processing PartsUsed items...');
+    const partsUsedItems = serviceVisit?.partsUsed?.map((part: any, index: number) => {
+      const productId = part.productId?._id || part.productId;
+      const freshData = freshProductMap.get(productId?.toString());
+      
+      console.log(`  Part ${index + 1}:`, {
+        rawPart: part,
+        productId: productId,
+        productIdString: productId?.toString(),
+        freshData: freshData,
+        hasInMap: freshProductMap.has(productId?.toString()),
+      });
+      
+      const item = {
+        type: 'product' as const,
+        productId: productId,
+        name: freshData?.name || part.productId?.name || 'Product',
+        quantity: part.quantity || 1,
+        unitPrice: freshData?.price || part.price || 0,
+        total: (part.quantity || 1) * (freshData?.price || part.price || 0),
+        hasGst: false,
+        gstAmount: 0,
+        hasWarranty: !!(freshData?.warranty || part.productId?.warranty),
+        warrantyCards: [],
+      };
+      
+      console.log(`    → Created item:`, item);
+      return item;
+    }) || [];
+    
+    console.log('Total PartsUsed items created:', partsUsedItems.length);
+
+    // Create suggested items for products not already in partsUsed
+    const usedProductIds = new Set(partsUsedItems.map((item: any) => item.productId?.toString()));
+    console.log('\n💡 Processing Suggested Products (excluding partsUsed)...');
+    console.log('Used Product IDs:', Array.from(usedProductIds));
+    
+    const uniqueSuggestedItems = suggestedProductsData?.products
+      ?.filter((product: any) => {
+        const isUsed = usedProductIds.has(product.productId);
+        console.log(`  Product "${product.name}" (${product.productId}):`, isUsed ? 'SKIP (already in partsUsed)' : 'INCLUDE');
+        return !isUsed;
+      })
+      .map((product: any) => ({
+        type: 'product' as const,
+        productId: product.productId,
+        name: product.name,
+        quantity: 1,
+        unitPrice: product.price || 0,
+        total: product.price || 0,
+        hasGst: false,
+        gstAmount: 0,
+        hasWarranty: !!product.warranty,
+        warrantyCards: [],
+      })) || [];
+
+    console.log('Total Unique Suggested items created:', uniqueSuggestedItems.length);
+    console.log('Unique Suggested Items:', uniqueSuggestedItems);
+
+    console.log('\n📊 SUMMARY:');
+    console.log('  PartsUsed Items:', partsUsedItems.length);
+    console.log('  Unique Suggested Items:', uniqueSuggestedItems.length);
+    console.log('  Total Items:', partsUsedItems.length + uniqueSuggestedItems.length);
+
+    const allItems = [...partsUsedItems, ...uniqueSuggestedItems];
+
+    if (allItems.length > 0) {
+      console.log('\n✅ Setting', allItems.length, 'items in form');
+      console.log('All Items:', allItems);
+      form.setValue('items', allItems);
+      setInitialItemsSet(true);
+    } else {
+      console.log('\n⚠️ No items to set, marking as initialized');
+      setInitialItemsSet(true);
+    }
+    console.log('========================================\n');
+  }, [open, serviceVisit, suggestedProductsData, initialItemsSet, loadingSuggestedProducts, form]);
+
+  useEffect(() => {
+    const subtotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
+    const discount = couponValidation?.coupon?.discountAmount || 0;
+    const total = subtotal - discount;
+
+    setCalculatedTotals({
+      subtotal,
+      discount,
+      taxAmount: 0,
+      total,
+    });
+  }, [items, couponValidation]);
+
+  const validateCouponMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const response = await apiRequest('POST', '/api/coupons/validate', {
+        code,
+        customerId: serviceVisit.customerId._id,
+        purchaseAmount: calculatedTotals.subtotal,
+      });
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      setCouponValidation(data);
+      toast({ title: "Coupon applied successfully", description: `Discount: ₹${data.coupon.discountAmount}` });
+    },
+    onError: (error: any) => {
+      setCouponValidation(null);
+      toast({ title: "Invalid coupon", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const createInvoiceMutation = useMutation({
+    mutationFn: async (data: InvoiceFormValues) => {
+      const response = await apiRequest('POST', '/api/invoices/from-service-visit', {
+        serviceVisitId: serviceVisit._id,
+        ...data,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/service-visits'] });
+      toast({ title: "Invoice created successfully", description: "Invoice sent for approval" });
+      onOpenChange(false);
+      form.reset();
+    },
+    onError: () => {
+      toast({ title: "Failed to create invoice", variant: "destructive" });
+    },
+  });
+
+  const addItem = () => {
+    const currentItems = form.getValues('items');
+    form.setValue('items', [
+      ...currentItems,
+      {
+        type: 'product' as const,
+        name: '',
+        quantity: 1,
+        unitPrice: 0,
+        total: 0,
+        hasGst: false,
+        gstAmount: 0,
+        hasWarranty: false,
+        warrantyCards: [],
+      },
+    ]);
+  };
+
+  const removeItem = (index: number) => {
+    const currentItems = form.getValues('items');
+    form.setValue('items', currentItems.filter((_, i) => i !== index));
+  };
+
+  const updateItemTotal = (index: number) => {
+    const items = form.getValues('items');
+    const item = items[index];
+    
+    if (item.hasGst) {
+      const total = item.unitPrice * item.quantity;
+      const gstAmount = total * 0.18;
+      form.setValue(`items.${index}.gstAmount`, gstAmount, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+      form.setValue(`items.${index}.total`, total, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+    } else {
+      const total = item.quantity * item.unitPrice;
+      form.setValue(`items.${index}.gstAmount`, 0, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+      form.setValue(`items.${index}.total`, total, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+    }
+  };
+
+  const toggleGst = (index: number) => {
+    const items = form.getValues('items');
+    const newHasGst = !items[index].hasGst;
+    form.setValue(`items.${index}.hasGst`, newHasGst);
+    updateItemTotal(index);
+  };
+
+  const applyCoupon = () => {
+    const code = form.getValues('couponCode');
+    if (code) {
+      validateCouponMutation.mutate(code);
+    }
+  };
+
+  const onSubmit = (data: InvoiceFormValues) => {
+    createInvoiceMutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="dialog-generate-invoice">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Receipt className="h-5 w-5" />
+            Generate Invoice
+          </DialogTitle>
+          <DialogDescription>
+            Create invoice for service visit - {serviceVisit?.vehicleReg || 'N/A'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Items & Services</h3>
+                    <Button type="button" variant="outline" size="sm" onClick={addItem} data-testid="button-add-item">
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Item
+                    </Button>
+                  </div>
+
+                  <div className="border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Qty</TableHead>
+                          <TableHead>Unit Price</TableHead>
+                          <TableHead>GST</TableHead>
+                          <TableHead>Total</TableHead>
+                          <TableHead>Warranty</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {items.map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <FormField
+                                control={form.control}
+                                name={`items.${index}.type`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                      <SelectTrigger className="w-[120px]" data-testid={`select-item-type-${index}`}>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="product">Product</SelectItem>
+                                        <SelectItem value="service">Service</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormItem>
+                                )}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <FormField
+                                control={form.control}
+                                name={`items.${index}.name`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    {item.type === 'product' ? (
+                                      <Select
+                                        value={form.watch(`items.${index}.productId`) || ''}
+                                        onValueChange={(productId) => {
+                                          const selectedProduct = products.find((p: any) => p._id === productId);
+                                          if (selectedProduct) {
+                                            field.onChange(selectedProduct.name);
+                                            form.setValue(`items.${index}.productId`, selectedProduct._id);
+                                            form.setValue(`items.${index}.unitPrice`, selectedProduct.sellingPrice);
+                                            updateItemTotal(index);
+                                          }
+                                        }}
+                                      >
+                                        <SelectTrigger data-testid={`select-product-${index}`}>
+                                          <SelectValue placeholder="Select product from inventory">
+                                            {field.value || 'Select product from inventory'}
+                                          </SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {products.filter((p: any) => p.stockQty > 0).map((product: any) => (
+                                            <SelectItem key={product._id} value={product._id}>
+                                              {product.name} - ₹{product.sellingPrice} ({product.stockQty} in stock)
+                                            </SelectItem>
+                                          ))}
+                                          {products.filter((p: any) => p.stockQty > 0).length === 0 && (
+                                            <div className="p-2 text-sm text-muted-foreground text-center">
+                                              No products in stock
+                                            </div>
+                                          )}
+                                        </SelectContent>
+                                      </Select>
+                                    ) : (
+                                      <Input {...field} placeholder="Service name" data-testid={`input-item-name-${index}`} />
+                                    )}
+                                  </FormItem>
+                                )}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <FormField
+                                control={form.control}
+                                name={`items.${index}.quantity`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <Input
+                                      type="number"
+                                      {...field}
+                                      onChange={(e) => {
+                                        field.onChange(parseFloat(e.target.value) || 0);
+                                        updateItemTotal(index);
+                                      }}
+                                      className="w-20"
+                                      data-testid={`input-item-quantity-${index}`}
+                                    />
+                                  </FormItem>
+                                )}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <FormField
+                                control={form.control}
+                                name={`items.${index}.unitPrice`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <Input
+                                      type="number"
+                                      {...field}
+                                      onChange={(e) => {
+                                        field.onChange(parseFloat(e.target.value) || 0);
+                                        updateItemTotal(index);
+                                      }}
+                                      className="w-24"
+                                      data-testid={`input-item-price-${index}`}
+                                    />
+                                  </FormItem>
+                                )}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <FormField
+                                control={form.control}
+                                name={`items.${index}.hasGst`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={() => toggleGst(index)}
+                                      className="h-4 w-4"
+                                      data-testid={`checkbox-gst-${index}`}
+                                    />
+                                  </FormItem>
+                                )}
+                              />
+                            </TableCell>
+                            <TableCell>₹{item.total.toLocaleString()}</TableCell>
+                            <TableCell>
+                              <FormField
+                                control={form.control}
+                                name={`items.${index}.hasWarranty`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      className="h-4 w-4"
+                                      data-testid={`checkbox-warranty-${index}`}
+                                    />
+                                  </FormItem>
+                                )}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {items.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeItem(index)}
+                                  data-testid={`button-remove-item-${index}`}
+                                >
+                                  <Minus className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Discount</h3>
+                  
+                  <div className="flex gap-2">
+                    <FormField
+                      control={form.control}
+                      name="couponCode"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Coupon Code</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter coupon code" data-testid="input-coupon-code" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <div className="self-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={applyCoupon}
+                        disabled={!couponCode || validateCouponMutation.isPending}
+                        data-testid="button-apply-coupon"
+                      >
+                        <Tag className="h-4 w-4 mr-1" />
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+
+                  {couponValidation && (
+                    <Badge variant="default" data-testid="badge-coupon-applied">
+                      Coupon Applied: {couponValidation.coupon.discountType === 'percentage'
+                        ? `${couponValidation.coupon.discountValue}% off`
+                        : `₹${couponValidation.coupon.discountValue} off`}
+                    </Badge>
+                  )}
+
+                  <div className="bg-muted p-4 rounded-lg space-y-2">
+                    <div className="flex justify-between">
+                      <span>Subtotal:</span>
+                      <span className="font-semibold" data-testid="text-subtotal">₹{calculatedTotals.subtotal.toLocaleString()}</span>
+                    </div>
+                    {calculatedTotals.discount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount:</span>
+                        <span className="font-semibold" data-testid="text-discount">-₹{calculatedTotals.discount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-lg font-bold border-t pt-2">
+                      <span>Total:</span>
+                      <span data-testid="text-total">₹{calculatedTotals.total.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Note: GST is calculated per item. Check the GST box for items that include GST in their price.</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} placeholder="Additional notes..." data-testid="textarea-notes" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="terms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Terms & Conditions</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} placeholder="Payment terms and conditions..." data-testid="textarea-terms" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                data-testid="button-cancel-invoice"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createInvoiceMutation.isPending}
+                data-testid="button-create-invoice"
+              >
+                {createInvoiceMutation.isPending ? "Creating..." : "Create Invoice"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
