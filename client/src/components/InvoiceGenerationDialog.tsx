@@ -283,6 +283,21 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
   const removeItem = (index: number) => {
     const currentItems = form.getValues('items');
     form.setValue('items', currentItems.filter((_, i) => i !== index));
+    setTimeout(() => recalculateTotals(), 0);
+  };
+
+  const recalculateTotals = () => {
+    const currentItems = form.getValues('items');
+    const subtotal = currentItems.reduce((sum, item) => sum + (item.total || 0), 0);
+    const discount = couponValidation?.coupon?.discountAmount || 0;
+    const total = subtotal - discount;
+
+    setCalculatedTotals({
+      subtotal,
+      discount,
+      taxAmount: 0,
+      total,
+    });
   };
 
   const updateItemTotal = (index: number) => {
@@ -300,6 +315,8 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
       form.setValue(`items.${index}.gstAmount`, 0, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       form.setValue(`items.${index}.total`, baseAmount, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
     }
+    
+    recalculateTotals();
   };
 
   const toggleGst = (index: number) => {
