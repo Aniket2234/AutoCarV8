@@ -219,11 +219,11 @@ export default function Invoices() {
   });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold" data-testid="heading-invoices">Invoices & Billing</h1>
-          <p className="text-muted-foreground">Manage invoices, payments, and billing</p>
+          <h1 className="text-2xl md:text-3xl font-bold" data-testid="heading-invoices">Invoices & Billing</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Manage invoices, payments, and billing</p>
         </div>
       </div>
 
@@ -269,7 +269,145 @@ export default function Invoices() {
             </Select>
           </div>
 
-          <div className="border rounded-lg">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {isLoading ? (
+              <div className="text-center py-8">Loading invoices...</div>
+            ) : filteredInvoices.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No invoices found</div>
+            ) : (
+              filteredInvoices.map((invoice) => (
+                <Card key={invoice._id} className="p-4" data-testid={`card-invoice-${invoice._id}`}>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-semibold text-lg" data-testid={`text-invoice-number-${invoice._id}`}>
+                          {invoice.invoiceNumber}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {invoice.customerId?.fullName || invoice.customerName}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(invoice.createdAt), 'dd MMM yyyy')}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-lg">₹{invoice.totalAmount.toLocaleString()}</div>
+                        {invoice.dueAmount > 0 && (
+                          <div className="text-sm text-destructive">Due: ₹{invoice.dueAmount.toLocaleString()}</div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2 flex-wrap">
+                      {getStatusBadge(invoice.status)}
+                      {getPaymentBadge(invoice.paymentStatus)}
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      {(user?.role === 'Admin' || user?.role === 'Manager') && invoice.status === 'pending_approval' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => {
+                              setSelectedInvoice(invoice);
+                              setShowApprovalDialog(true);
+                            }}
+                            data-testid={`button-approve-${invoice._id}`}
+                            className="flex-1"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => {
+                              setSelectedInvoice(invoice);
+                              setShowRejectDialog(true);
+                            }}
+                            data-testid={`button-reject-${invoice._id}`}
+                            className="flex-1"
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewPDF(invoice._id)}
+                        data-testid={`button-view-${invoice._id}`}
+                        className="flex-1"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      {invoice.status === 'approved' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadPDF(invoice._id)}
+                          data-testid={`button-download-${invoice._id}`}
+                          className="flex-1"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download
+                        </Button>
+                      )}
+                      {user?.role === 'Admin' && invoice.status === 'approved' && (
+                        <Button
+                          size="sm"
+                          variant={invoice.paymentStatus === 'paid' ? 'secondary' : 'default'}
+                          onClick={() => togglePaidStatusMutation.mutate({ invoiceId: invoice._id, currentStatus: invoice.paymentStatus })}
+                          disabled={togglePaidStatusMutation.isPending}
+                          data-testid={`button-toggle-paid-${invoice._id}`}
+                          className="flex-1"
+                        >
+                          {invoice.paymentStatus === 'paid' ? 'Mark Unpaid' : 'Mark Paid'}
+                        </Button>
+                      )}
+                      {invoice.paymentStatus === 'paid' && invoice.status === 'approved' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedInvoice(invoice);
+                            setShowWarrantyDialog(true);
+                          }}
+                          data-testid={`button-warranty-${invoice._id}`}
+                          className="flex-1"
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          Warranty
+                        </Button>
+                      )}
+                      {user?.role === 'Admin' && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            setSelectedInvoice(invoice);
+                            setShowDeleteDialog(true);
+                          }}
+                          data-testid={`button-delete-${invoice._id}`}
+                          className="flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block border rounded-lg">
             <Table>
               <TableHeader>
                 <TableRow>
