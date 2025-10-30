@@ -561,24 +561,6 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                         : `₹${couponValidation.coupon.discountValue} off`}
                     </Badge>
                   )}
-
-                  <div className="bg-muted p-4 rounded-lg space-y-2">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span className="font-semibold" data-testid="text-subtotal">₹{calculatedTotals.subtotal.toLocaleString()}</span>
-                    </div>
-                    {calculatedTotals.discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Discount:</span>
-                        <span className="font-semibold" data-testid="text-discount">-₹{calculatedTotals.discount.toLocaleString()}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-lg font-bold border-t pt-2">
-                      <span>Total:</span>
-                      <span data-testid="text-total">₹{calculatedTotals.total.toLocaleString()}</span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Note: GST is calculated per item. Check the GST box for items that include GST in their price.</p>
                 </div>
               </CardContent>
             </Card>
