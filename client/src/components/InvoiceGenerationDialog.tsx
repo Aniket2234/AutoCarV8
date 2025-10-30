@@ -567,6 +567,42 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
 
             <Card>
               <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Calculator className="h-5 w-5" />
+                    Invoice Summary
+                  </h3>
+                  
+                  <div className="bg-muted p-4 rounded-lg space-y-3">
+                    <div className="flex justify-between text-base">
+                      <span>Subtotal:</span>
+                      <span className="font-semibold" data-testid="text-subtotal">₹{calculatedTotals.subtotal.toLocaleString()}</span>
+                    </div>
+                    
+                    {calculatedTotals.discount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount:</span>
+                        <span className="font-semibold" data-testid="text-discount">-₹{calculatedTotals.discount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    
+                    <div className="border-t border-border pt-3 mt-3">
+                      <div className="flex justify-between text-xl font-bold">
+                        <span>Grand Total:</span>
+                        <span data-testid="text-grand-total">₹{calculatedTotals.total.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground">
+                    Note: GST is calculated per item. Check the GST box for items that include GST in their price.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
                 <div className="space-y-4">
                   <FormField
                     control={form.control}

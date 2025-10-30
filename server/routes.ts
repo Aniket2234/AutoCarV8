@@ -4352,10 +4352,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Calculate tax and total
-      const amountAfterDiscount = subtotal - discountAmount;
-      const taxAmount = (amountAfterDiscount * taxRate) / 100;
-      const totalAmount = amountAfterDiscount + taxAmount;
+      // Calculate total (tax is already included in item totals via per-item GST)
+      const totalAmount = subtotal - discountAmount;
+      const taxAmount = 0;
       
       // Create invoice (using new + save to trigger pre-save hooks)
       const invoice = new Invoice({
