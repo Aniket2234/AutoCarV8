@@ -289,15 +289,16 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
     const items = form.getValues('items');
     const item = items[index];
     
+    const baseAmount = item.unitPrice * item.quantity;
+    
     if (item.hasGst) {
-      const total = item.unitPrice * item.quantity;
-      const gstAmount = total * 0.18;
+      const gstAmount = baseAmount * 0.18;
+      const totalWithGst = baseAmount + gstAmount;
       form.setValue(`items.${index}.gstAmount`, gstAmount, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-      form.setValue(`items.${index}.total`, total, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+      form.setValue(`items.${index}.total`, totalWithGst, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
     } else {
-      const total = item.quantity * item.unitPrice;
       form.setValue(`items.${index}.gstAmount`, 0, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-      form.setValue(`items.${index}.total`, total, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+      form.setValue(`items.${index}.total`, baseAmount, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
     }
   };
 
