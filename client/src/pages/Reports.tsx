@@ -479,7 +479,7 @@ export default function Reports() {
 
           {detailsDialog.type === "sales" && salesReport && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-2xl font-bold">₹{totalSales.toLocaleString('en-IN')}</div>
@@ -499,8 +499,8 @@ export default function Reports() {
                   </CardContent>
                 </Card>
               </div>
-              <div className="border rounded-lg">
-                <table className="w-full">
+              <div className="border rounded-lg overflow-x-auto">
+                <table className="w-full min-w-[500px]">
                   <thead className="bg-muted">
                     <tr>
                       <th className="p-3 text-left">Period</th>
@@ -528,7 +528,7 @@ export default function Reports() {
 
           {detailsDialog.type === "inventory" && inventoryReport && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-2xl font-bold">₹{inventoryReport.totalInventoryValue.totalValue.toLocaleString('en-IN')}</div>
@@ -551,8 +551,8 @@ export default function Reports() {
               {inventoryReport.lowStockProducts.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-2">Low Stock Products</h3>
-                  <div className="border rounded-lg">
-                    <table className="w-full">
+                  <div className="border rounded-lg overflow-x-auto">
+                    <table className="w-full min-w-[400px]">
                       <thead className="bg-muted">
                         <tr>
                           <th className="p-3 text-left">Product</th>
@@ -577,8 +577,8 @@ export default function Reports() {
           )}
 
           {detailsDialog.type === "products" && topProducts && (
-            <div className="border rounded-lg">
-              <table className="w-full">
+            <div className="border rounded-lg overflow-x-auto">
+              <table className="w-full min-w-[600px]">
                 <thead className="bg-muted">
                   <tr>
                     <th className="p-3 text-left">Product</th>
@@ -602,8 +602,8 @@ export default function Reports() {
           )}
 
           {detailsDialog.type === "employee" && employeePerformance && (
-            <div className="border rounded-lg">
-              <table className="w-full">
+            <div className="border rounded-lg overflow-x-auto">
+              <table className="w-full min-w-[700px]">
                 <thead className="bg-muted">
                   <tr>
                     <th className="p-3 text-left">Employee</th>

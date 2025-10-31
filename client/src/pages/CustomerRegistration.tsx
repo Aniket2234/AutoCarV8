@@ -55,6 +55,15 @@ const customerFormSchema = z.object({
   state: z.string().min(1, "State is required"),
   pinCode: z.string().min(6, "Pin code must be 6 digits"),
   referralSource: z.string().optional(),
+  customReferralSource: z.string().optional(),
+}).refine((data) => {
+  if (data.referralSource === "Other" && !data.customReferralSource) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please specify where you heard about us",
+  path: ["customReferralSource"],
 });
 
 // Warranty card schema
@@ -144,6 +153,7 @@ export default function CustomerRegistration() {
       state: "",
       pinCode: "",
       referralSource: "",
+      customReferralSource: "",
     },
   });
 
@@ -661,6 +671,22 @@ export default function CustomerRegistration() {
                         </FormItem>
                       )}
                     />
+
+                    {customerForm.watch("referralSource") === "Other" && (
+                      <FormField
+                        control={customerForm.control}
+                        name="customReferralSource"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Please specify *</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Where did you hear about us?" data-testid="input-custom-referral" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
 
                   <FormField

@@ -233,7 +233,7 @@ export async function generateInvoicePDF(invoiceData: InvoiceData): Promise<stri
       doc.text('Product Name', 50, yPosition);
       doc.text('Qty', 230, yPosition, { width: 30, align: 'right' });
       doc.text('Unit Price', 270, yPosition, { width: 70, align: 'right' });
-      doc.text('GST', 350, yPosition, { width: 50, align: 'right' });
+      doc.text('GST (18%)', 350, yPosition, { width: 50, align: 'right' });
       doc.text('Total', 410, yPosition, { width: 120, align: 'right' });
 
       yPosition += 20;
@@ -259,7 +259,7 @@ export async function generateInvoicePDF(invoiceData: InvoiceData): Promise<stri
           doc.text('Product Name', 50, yPosition);
           doc.text('Qty', 230, yPosition, { width: 30, align: 'right' });
           doc.text('Unit Price', 270, yPosition, { width: 70, align: 'right' });
-          doc.text('GST', 350, yPosition, { width: 50, align: 'right' });
+          doc.text('GST (18%)', 350, yPosition, { width: 50, align: 'right' });
           doc.text('Total', 410, yPosition, { width: 120, align: 'right' });
           yPosition += 20;
           doc.moveTo(50, yPosition).lineTo(550, yPosition).stroke();

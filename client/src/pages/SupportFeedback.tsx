@@ -511,30 +511,30 @@ export default function SupportFeedback() {
           </div>
 
           {isLoadingTickets ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-64" />
+                <Skeleton key={i} className="h-32" />
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto pb-4">
-              <div className="flex gap-6 min-w-max">
-                {statuses.map((status) => (
-                  <Card key={status.id} className={`w-96 flex-shrink-0 border-2 ${status.borderColor}`} data-testid={`card-status-${status.id}`}>
-                    <CardHeader className={`pb-4 border-b ${status.bgColor}`}>
-                      <CardTitle className="text-lg flex items-center justify-between">
-                        <div className={`flex items-center gap-2 ${status.color}`}>
-                          <MessageSquare className="h-5 w-5" />
-                          {status.label}
-                        </div>
-                        <Badge variant="secondary" className="ml-2">
-                          {status.count}
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 pt-4">
-                      {ticketsByStatus[status.id as keyof typeof ticketsByStatus].length > 0 ? (
-                        ticketsByStatus[status.id as keyof typeof ticketsByStatus].map((ticket: any) => (
+            <div className="space-y-4">
+              {statuses.map((status) => (
+                <Card key={status.id} className={`border-2 ${status.borderColor}`} data-testid={`card-status-${status.id}`}>
+                  <CardHeader className={`pb-4 border-b ${status.bgColor}`}>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <div className={`flex items-center gap-2 ${status.color}`}>
+                        <MessageSquare className="h-5 w-5" />
+                        {status.label}
+                      </div>
+                      <Badge variant="secondary" className="ml-2">
+                        {status.count}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    {ticketsByStatus[status.id as keyof typeof ticketsByStatus].length > 0 ? (
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {ticketsByStatus[status.id as keyof typeof ticketsByStatus].map((ticket: any) => (
                           <Card key={ticket._id} className={`border ${status.borderColor} ${status.bgColor} hover:shadow-md transition-shadow`} data-testid={`card-ticket-${ticket.ticketNumber}`}>
                             <CardContent className="p-4 space-y-3">
                               <div className="space-y-2">
@@ -573,16 +573,16 @@ export default function SupportFeedback() {
                               </div>
                             </CardContent>
                           </Card>
-                        ))
-                      ) : (
-                        <p className="text-muted-foreground text-sm text-center py-8" data-testid={`empty-${status.id}`}>
-                          No tickets in {status.label.toLowerCase()}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-sm text-center py-8" data-testid={`empty-${status.id}`}>
+                        No tickets in {status.label.toLowerCase()}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </TabsContent>

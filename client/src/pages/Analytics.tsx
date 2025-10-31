@@ -746,8 +746,8 @@ export default function Analytics() {
                       </BarChart>
                     </ResponsiveContainer>
 
-                    <div className="mt-6 border rounded-lg">
-                      <table className="w-full">
+                    <div className="mt-6 border rounded-lg overflow-x-auto">
+                      <table className="w-full min-w-[700px]">
                         <thead className="bg-muted">
                           <tr>
                             <th className="p-3 text-left">Employee</th>
@@ -850,8 +850,8 @@ export default function Analytics() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="border rounded-lg">
-                      <table className="w-full">
+                    <div className="border rounded-lg overflow-x-auto">
+                      <table className="w-full min-w-[500px]">
                         <thead className="bg-muted">
                           <tr>
                             <th className="p-3 text-left">Product</th>
