@@ -338,7 +338,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="dialog-generate-invoice">
+      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-7xl max-h-[95vh] overflow-y-auto" data-testid="dialog-generate-invoice">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Receipt className="h-5 w-5" />
@@ -362,18 +362,18 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                     </Button>
                   </div>
 
-                  <div className="border rounded-lg">
+                  <div className="border rounded-lg overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Qty</TableHead>
-                          <TableHead>Unit Price</TableHead>
-                          <TableHead>GST</TableHead>
-                          <TableHead>Total</TableHead>
-                          <TableHead>Warranty</TableHead>
-                          <TableHead></TableHead>
+                          <TableHead className="min-w-[120px]">Type</TableHead>
+                          <TableHead className="min-w-[200px]">Name</TableHead>
+                          <TableHead className="min-w-[80px]">Qty</TableHead>
+                          <TableHead className="min-w-[120px]">Unit Price</TableHead>
+                          <TableHead className="min-w-[60px]">GST</TableHead>
+                          <TableHead className="min-w-[100px]">Total</TableHead>
+                          <TableHead className="min-w-[80px]">Warranty</TableHead>
+                          <TableHead className="min-w-[60px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -544,7 +544,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Discount</h3>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <FormField
                       control={form.control}
                       name="couponCode"
@@ -557,13 +557,14 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                         </FormItem>
                       )}
                     />
-                    <div className="self-end">
+                    <div className="sm:self-end">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={applyCoupon}
                         disabled={!couponCode || validateCouponMutation.isPending}
                         data-testid="button-apply-coupon"
+                        className="w-full sm:w-auto"
                       >
                         <Tag className="h-4 w-4 mr-1" />
                         Apply
@@ -650,12 +651,13 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
               </CardContent>
             </Card>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel-invoice"
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
@@ -663,6 +665,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                 type="submit"
                 disabled={createInvoiceMutation.isPending}
                 data-testid="button-create-invoice"
+                className="w-full sm:w-auto"
               >
                 {createInvoiceMutation.isPending ? "Creating..." : "Create Invoice"}
               </Button>
