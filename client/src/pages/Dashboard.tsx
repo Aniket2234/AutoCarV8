@@ -26,7 +26,8 @@ import {
   CheckSquare,
   UserCircle,
   Ticket,
-  AlertCircle
+  AlertCircle,
+  Store
 } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { 
@@ -81,6 +82,10 @@ interface DashboardStats {
 export default function Dashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  
+  // Get selected shop from localStorage
+  const selectedShopId = localStorage.getItem('selectedShop');
+  const shopName = selectedShopId === 'beed' ? 'Shop A - Beed' : selectedShopId === 'ahilyanagar' ? 'Shop B - Ahilyanagar' : 'Shop Not Selected';
 
   const { data: dashboardStats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard-stats"],
@@ -358,6 +363,13 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground mt-1" data-testid="text-welcome">{getWelcomeMessage()}</p>
+        </div>
+        <div className="flex items-center gap-2 bg-primary/10 dark:bg-primary/20 px-4 py-2 rounded-lg border border-primary/20">
+          <Store className="h-5 w-5 text-primary" />
+          <div>
+            <p className="text-xs text-muted-foreground">Current Shop</p>
+            <p className="font-semibold text-sm" data-testid="text-current-shop">{shopName}</p>
+          </div>
         </div>
       </div>
 

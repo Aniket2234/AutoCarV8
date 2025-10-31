@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, CheckCircle, XCircle, Car, User, MapPin, Phone, Mail, Edit, Trash2, CalendarIcon, SortAsc } from "lucide-react";
+import { Search, CheckCircle, XCircle, Car, User, MapPin, Phone, Mail, Edit, Trash2, CalendarIcon, SortAsc, Store } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -296,6 +296,10 @@ export default function CustomerRegistrationDashboard() {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   
   const isAdmin = user?.role === 'Admin';
+  
+  // Get selected shop from localStorage
+  const selectedShopId = localStorage.getItem('selectedShop');
+  const shopName = selectedShopId === 'beed' ? 'Shop A - Beed' : selectedShopId === 'ahilyanagar' ? 'Shop B - Ahilyanagar' : 'Shop Not Selected';
 
   // Fetch all customers
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
@@ -542,10 +546,21 @@ export default function CustomerRegistrationDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Customer Registration Dashboard</h1>
-        <p className="text-muted-foreground mt-2">
-          View and manage all registered customers and their vehicles
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Customer Registration Dashboard</h1>
+            <p className="text-muted-foreground mt-2">
+              View and manage all registered customers and their vehicles
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-primary/10 dark:bg-primary/20 px-4 py-2 rounded-lg border border-primary/20">
+            <Store className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-xs text-muted-foreground">Current Shop</p>
+              <p className="font-semibold text-sm" data-testid="text-current-shop">{shopName}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
