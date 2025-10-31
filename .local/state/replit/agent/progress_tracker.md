@@ -13,3 +13,5 @@
 [x] 13. Fix Generate Invoice dialog for mobile - ✅ Card-based layout on mobile, table on desktop, no horizontal scroll
 [x] 14. Fix Products/Inventory/Analytics headers for mobile - ✅ Buttons wrap vertically on mobile, no horizontal scroll
 [x] 15. Remove dummy WhatsApp/Feedback buttons - ✅ Removed from Support ticket details dialog
+[x] 16. Fix Inventory Management tabs for mobile - ✅ Tabs scroll horizontally on mobile with overflow-x wrapper
+[x] 17. Fix Analytics/Reports tabs and headers for mobile - ✅ All report headers stack vertically, tabs scroll horizontally
