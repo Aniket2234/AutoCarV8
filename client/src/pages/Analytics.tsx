@@ -415,20 +415,22 @@ export default function Analytics() {
 
       {/* Detailed Reports Tabs */}
       <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList data-testid="tabs-reports">
-          <TabsTrigger value="sales" data-testid="tab-sales">Sales</TabsTrigger>
-          <TabsTrigger value="customers" data-testid="tab-customers">Customers</TabsTrigger>
-          <TabsTrigger value="inventory" data-testid="tab-inventory">Inventory</TabsTrigger>
-          <TabsTrigger value="employees" data-testid="tab-employees">Employees</TabsTrigger>
-          <TabsTrigger value="warranties" data-testid="tab-warranties">Warranties</TabsTrigger>
-          <TabsTrigger value="feedback" data-testid="tab-feedback">Feedback</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto">
+          <TabsList data-testid="tabs-reports" className="w-full justify-start">
+            <TabsTrigger value="sales" data-testid="tab-sales">Sales</TabsTrigger>
+            <TabsTrigger value="customers" data-testid="tab-customers">Customers</TabsTrigger>
+            <TabsTrigger value="inventory" data-testid="tab-inventory">Inventory</TabsTrigger>
+            <TabsTrigger value="employees" data-testid="tab-employees">Employees</TabsTrigger>
+            <TabsTrigger value="warranties" data-testid="tab-warranties">Warranties</TabsTrigger>
+            <TabsTrigger value="feedback" data-testid="tab-feedback">Feedback</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Sales Report */}
         <TabsContent value="sales" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
             <h2 className="text-2xl font-bold">Sales Report</h2>
-            <Button onClick={() => handleExport("sales")} data-testid="button-export-sales">
+            <Button onClick={() => handleExport("sales")} data-testid="button-export-sales" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export Sales Report
             </Button>
@@ -517,9 +519,9 @@ export default function Analytics() {
 
         {/* Customer Report */}
         <TabsContent value="customers" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
             <h2 className="text-2xl font-bold">Customer Report</h2>
-            <Button onClick={() => handleExport("customers")} data-testid="button-export-customers">
+            <Button onClick={() => handleExport("customers")} data-testid="button-export-customers" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export Customer Report
             </Button>
@@ -607,9 +609,9 @@ export default function Analytics() {
 
         {/* Inventory Report */}
         <TabsContent value="inventory" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
             <h2 className="text-2xl font-bold">Inventory Report</h2>
-            <Button onClick={() => handleExport("inventory")} data-testid="button-export-inventory">
+            <Button onClick={() => handleExport("inventory")} data-testid="button-export-inventory" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export Inventory Report
             </Button>
@@ -717,9 +719,9 @@ export default function Analytics() {
 
         {/* Employee Performance */}
         <TabsContent value="employees" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
             <h2 className="text-2xl font-bold">Employee Performance Report</h2>
-            <Button onClick={() => handleExport("employees")} data-testid="button-export-employees">
+            <Button onClick={() => handleExport("employees")} data-testid="button-export-employees" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export Employee Report
             </Button>
@@ -781,9 +783,9 @@ export default function Analytics() {
 
         {/* Warranty Report */}
         <TabsContent value="warranties" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
             <h2 className="text-2xl font-bold">Warranty Report</h2>
-            <Button onClick={() => handleExport("warranties")} data-testid="button-export-warranties">
+            <Button onClick={() => handleExport("warranties")} data-testid="button-export-warranties" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export Warranty Report
             </Button>
@@ -881,9 +883,9 @@ export default function Analytics() {
 
         {/* Feedback Report */}
         <TabsContent value="feedback" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
             <h2 className="text-2xl font-bold">Feedback & Complaints Report</h2>
-            <Button onClick={() => handleExport("feedback")} data-testid="button-export-feedback">
+            <Button onClick={() => handleExport("feedback")} data-testid="button-export-feedback" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export Feedback Report
             </Button>

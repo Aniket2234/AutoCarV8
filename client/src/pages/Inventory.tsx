@@ -616,18 +616,20 @@ export default function Inventory() {
       </div>
 
       <Tabs defaultValue="products" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="products" data-testid="tab-products">Products Catalog</TabsTrigger>
-          <TabsTrigger value="transactions" data-testid="tab-transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="low-stock" data-testid="tab-low-stock">
-            Low Stock Alerts
-            {lowStockProducts.length > 0 && (
-              <Badge variant="destructive" className="ml-2">{lowStockProducts.length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="returns" data-testid="tab-returns">Product Returns</TabsTrigger>
-          <TabsTrigger value="purchase-orders" data-testid="tab-purchase-orders">Purchase Orders</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="products" data-testid="tab-products">Products Catalog</TabsTrigger>
+            <TabsTrigger value="transactions" data-testid="tab-transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="low-stock" data-testid="tab-low-stock">
+              Low Stock Alerts
+              {lowStockProducts.length > 0 && (
+                <Badge variant="destructive" className="ml-2">{lowStockProducts.length}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="returns" data-testid="tab-returns">Product Returns</TabsTrigger>
+            <TabsTrigger value="purchase-orders" data-testid="tab-purchase-orders">Purchase Orders</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="products" className="space-y-4">
           <Card>
