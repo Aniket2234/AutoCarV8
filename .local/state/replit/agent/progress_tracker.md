@@ -15,3 +15,5 @@
 [x] 15. Remove dummy WhatsApp/Feedback buttons - ✅ Removed from Support ticket details dialog
 [x] 16. Fix Inventory Management tabs for mobile - ✅ Tabs scroll horizontally on mobile with overflow-x wrapper
 [x] 17. Fix Analytics/Reports tabs and headers for mobile - ✅ All report headers stack vertically, tabs scroll horizontally
+[x] 18. Remove Purchase Orders tab from Inventory Management - ✅ Tab removed from UI
+[x] 19. Fix 404 errors for /api/suppliers and /api/purchase-orders - ✅ Removed queries and all references to suppliers and purchase orders

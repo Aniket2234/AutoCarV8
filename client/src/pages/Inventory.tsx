@@ -67,14 +67,6 @@ export default function Inventory() {
     queryKey: ["/api/products/low-stock"],
   });
 
-  const { data: suppliers = [] } = useQuery<any[]>({
-    queryKey: ["/api/suppliers"],
-  });
-
-  const { data: purchaseOrders = [] } = useQuery<any[]>({
-    queryKey: ["/api/purchase-orders"],
-  });
-
   const { data: productReturns = [] } = useQuery<any[]>({
     queryKey: ["/api/product-returns"],
   });
@@ -405,34 +397,14 @@ export default function Inventory() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="supplierId">Supplier</Label>
-                    <Select
-                      value={transactionFormData.supplierId}
-                      onValueChange={(value) => setTransactionFormData({ ...transactionFormData, supplierId: value })}
-                    >
-                      <SelectTrigger data-testid="select-supplier">
-                        <SelectValue placeholder="Select supplier" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {suppliers.map((supplier: any) => (
-                          <SelectItem key={supplier._id} value={supplier._id}>
-                            {supplier.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="batchNumber">Batch Number</Label>
-                    <Input
-                      id="batchNumber"
-                      value={transactionFormData.batchNumber}
-                      onChange={(e) => setTransactionFormData({ ...transactionFormData, batchNumber: e.target.value })}
-                      data-testid="input-batch-number"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="batchNumber">Batch Number</Label>
+                  <Input
+                    id="batchNumber"
+                    value={transactionFormData.batchNumber}
+                    onChange={(e) => setTransactionFormData({ ...transactionFormData, batchNumber: e.target.value })}
+                    data-testid="input-batch-number"
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -627,7 +599,6 @@ export default function Inventory() {
               )}
             </TabsTrigger>
             <TabsTrigger value="returns" data-testid="tab-returns">Product Returns</TabsTrigger>
-            <TabsTrigger value="purchase-orders" data-testid="tab-purchase-orders">Purchase Orders</TabsTrigger>
           </TabsList>
         </div>
 
@@ -900,46 +871,6 @@ export default function Inventory() {
             ]}
             data={productReturns}
             onRowClick={(row) => console.log("Return:", row)}
-          />
-        </TabsContent>
-
-        <TabsContent value="purchase-orders" className="space-y-4">
-          <DataTable
-            columns={[
-              { header: "PO Number", accessor: "poNumber" },
-              { 
-                header: "Supplier", 
-                accessor: (row) => row.supplierId?.name || "N/A",
-              },
-              { 
-                header: "Total Amount", 
-                accessor: (row) => formatCurrency(row.totalAmount),
-              },
-              { 
-                header: "Status", 
-                accessor: (row) => (
-                  <Badge variant={
-                    row.status === 'received' ? 'default' :
-                    row.status === 'approved' ? 'secondary' :
-                    row.status === 'cancelled' ? 'destructive' : 'outline'
-                  }>
-                    {row.status.toUpperCase()}
-                  </Badge>
-                ),
-              },
-              { 
-                header: "Order Date", 
-                accessor: (row) => format(new Date(row.orderDate), 'MMM dd, yyyy'),
-              },
-              { 
-                header: "Expected Delivery", 
-                accessor: (row) => row.expectedDeliveryDate 
-                  ? format(new Date(row.expectedDeliveryDate), 'MMM dd, yyyy')
-                  : "-",
-              },
-            ]}
-            data={purchaseOrders}
-            onRowClick={(row) => console.log("PO:", row)}
           />
         </TabsContent>
       </Tabs>
