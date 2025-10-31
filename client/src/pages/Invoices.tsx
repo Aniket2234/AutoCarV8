@@ -410,7 +410,7 @@ export default function Invoices() {
           <div className="hidden md:block border rounded-lg">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800">
                   <TableHead>Invoice #</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Amount</TableHead>
