@@ -7,3 +7,5 @@
 [x] 7. Update progress tracker and complete import - ✅ Migration complete
 [x] 8. Make Generate Invoice dialog larger for desktop - ✅ Dialog now uses max-w-7xl (90vw on desktop)
 [x] 9. Make Generate Invoice dialog mobile-responsive - ✅ Full mobile optimization with scrollable table, stacked buttons
+[x] 10. Implement separate cards for each vehicle per customer - ✅ CustomerRegistrationDashboard now shows one card per vehicle
+[x] 11. Add current shop name display to all dashboards - ✅ Shop name displayed at top of Dashboard and CustomerRegistrationDashboard
