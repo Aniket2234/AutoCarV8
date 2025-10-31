@@ -9,3 +9,4 @@
 [x] 9. Make Generate Invoice dialog mobile-responsive - ✅ Full mobile optimization with scrollable table, stacked buttons
 [x] 10. Implement separate cards for each vehicle per customer - ✅ CustomerRegistrationDashboard now shows one card per vehicle
 [x] 11. Add current shop name display to all dashboards - ✅ Shop name displayed at top of Dashboard and CustomerRegistrationDashboard
+[x] 12. Securely store all credentials using Replit Secrets - ✅ MONGODB_URI, WHATSAPP_API_KEY, and WHATSAPP_PHONE_NUMBER_ID stored securely
