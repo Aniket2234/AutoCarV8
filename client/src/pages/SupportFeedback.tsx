@@ -673,27 +673,6 @@ export default function SupportFeedback() {
                 <p>{selectedTicket.description}</p>
               </div>
 
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => sendWhatsAppMutation.mutate(selectedTicket._id)}
-                  disabled={sendWhatsAppMutation.isPending}
-                  variant="outline"
-                  data-testid="button-send-whatsapp"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Send WhatsApp Follow-up (Dummy)
-                </Button>
-                <Button 
-                  onClick={() => sendFeedbackMutation.mutate(selectedTicket._id)}
-                  disabled={sendFeedbackMutation.isPending || selectedTicket.status !== 'resolved'}
-                  variant="outline"
-                  data-testid="button-send-feedback"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Feedback Form (Dummy)
-                </Button>
-              </div>
-
               <div>
                 <Label className="mb-2 block">Notes</Label>
                 <div className="space-y-2 mb-4">

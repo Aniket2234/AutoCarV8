@@ -10,3 +10,6 @@
 [x] 10. Implement separate cards for each vehicle per customer - ✅ CustomerRegistrationDashboard now shows one card per vehicle
 [x] 11. Add current shop name display to all dashboards - ✅ Shop name displayed at top of Dashboard and CustomerRegistrationDashboard
 [x] 12. Securely store all credentials using Replit Secrets - ✅ MONGODB_URI, WHATSAPP_API_KEY, and WHATSAPP_PHONE_NUMBER_ID stored securely
+[x] 13. Fix Generate Invoice dialog for mobile - ✅ Card-based layout on mobile, table on desktop, no horizontal scroll
+[x] 14. Fix Products/Inventory/Analytics headers for mobile - ✅ Buttons wrap vertically on mobile, no horizontal scroll
+[x] 15. Remove dummy WhatsApp/Feedback buttons - ✅ Removed from Support ticket details dialog

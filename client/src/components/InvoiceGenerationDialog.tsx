@@ -362,7 +362,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                     </Button>
                   </div>
 
-                  <div className="border rounded-lg overflow-x-auto">
+                  <div className="hidden md:block border rounded-lg overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -534,6 +534,165 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                         ))}
                       </TableBody>
                     </Table>
+                  </div>
+
+                  <div className="md:hidden space-y-3">
+                    {items.map((item, index) => (
+                      <Card key={index} className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-sm">Item {index + 1}</h4>
+                          {items.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeItem(index)}
+                              data-testid={`button-remove-item-${index}`}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.type`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Type</FormLabel>
+                              <Select value={field.value} onValueChange={field.onChange}>
+                                <SelectTrigger data-testid={`select-item-type-${index}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="product">Product</SelectItem>
+                                  <SelectItem value="service">Service</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.name`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name</FormLabel>
+                              {item.type === 'product' ? (
+                                <Select
+                                  value={form.watch(`items.${index}.productId`) || ''}
+                                  onValueChange={(productId) => {
+                                    const selectedProduct = products.find((p: any) => p._id === productId);
+                                    if (selectedProduct) {
+                                      field.onChange(selectedProduct.name);
+                                      form.setValue(`items.${index}.productId`, selectedProduct._id);
+                                      form.setValue(`items.${index}.unitPrice`, selectedProduct.sellingPrice);
+                                      updateItemTotal(index);
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger data-testid={`select-product-${index}`}>
+                                    <SelectValue placeholder="Select product">
+                                      {field.value || 'Select product'}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {products.filter((p: any) => p.stockQty > 0).map((product: any) => (
+                                      <SelectItem key={product._id} value={product._id}>
+                                        {product.name} - ₹{product.sellingPrice}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Input {...field} placeholder="Service name" data-testid={`input-item-name-${index}`} />
+                              )}
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.quantity`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Qty</FormLabel>
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(parseFloat(e.target.value) || 0);
+                                    updateItemTotal(index);
+                                  }}
+                                  data-testid={`input-item-quantity-${index}`}
+                                />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.unitPrice`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Unit Price</FormLabel>
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(parseFloat(e.target.value) || 0);
+                                    updateItemTotal(index);
+                                  }}
+                                  data-testid={`input-item-price-${index}`}
+                                />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.hasGst`}
+                              render={({ field }) => (
+                                <FormItem className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={field.value}
+                                    onChange={() => toggleGst(index)}
+                                    className="h-4 w-4"
+                                    data-testid={`checkbox-gst-${index}`}
+                                  />
+                                  <FormLabel className="!mt-0">GST</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.hasWarranty`}
+                              render={({ field }) => (
+                                <FormItem className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={field.value}
+                                    onChange={field.onChange}
+                                    className="h-4 w-4"
+                                    data-testid={`checkbox-warranty-${index}`}
+                                  />
+                                  <FormLabel className="!mt-0">Warranty</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="text-right">
+                            <FormLabel className="text-xs text-muted-foreground">Total</FormLabel>
+                            <p className="font-semibold">₹{item.total.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
                   </div>
                 </div>
               </CardContent>

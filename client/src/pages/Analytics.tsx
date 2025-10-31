@@ -294,14 +294,14 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6" data-testid="page-analytics">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Analytics & Reports</h1>
           <p className="text-muted-foreground mt-1">Comprehensive business insights and performance metrics</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as ReportPeriod)}>
-            <SelectTrigger className="w-[180px]" data-testid="select-report-period">
+            <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-report-period">
               <SelectValue placeholder="Select period" />
             </SelectTrigger>
             <SelectContent>
@@ -311,7 +311,7 @@ export default function Analytics() {
               <SelectItem value="year">This Year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => handleExport("all")} data-testid="button-export-all">
+          <Button variant="outline" onClick={() => handleExport("all")} data-testid="button-export-all" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export All
           </Button>

@@ -864,9 +864,9 @@ export default function Products() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold">Products & Inventory</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <input
             type="file"
             id="import-products"
@@ -879,6 +879,7 @@ export default function Products() {
             onClick={handleExportProducts}
             disabled={products.length === 0}
             data-testid="button-export"
+            size="sm"
           >
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -887,6 +888,7 @@ export default function Products() {
             variant="outline"
             onClick={() => document.getElementById('import-products')?.click()}
             data-testid="button-import"
+            size="sm"
           >
             <Upload className="h-4 w-4 mr-2" />
             Import
@@ -896,13 +898,14 @@ export default function Products() {
             onClick={() => deleteDuplicatesMutation.mutate()}
             disabled={deleteDuplicatesMutation.isPending}
             data-testid="button-delete-duplicates"
+            size="sm"
           >
             <Copy className="h-4 w-4 mr-2" />
             Delete Duplicates
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button data-testid="button-add-product">
+              <Button data-testid="button-add-product" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </Button>
@@ -920,8 +923,8 @@ export default function Products() {
         </div>
       </div>
 
-      <div className="flex gap-4 flex-wrap">
-        <div className="relative flex-1 min-w-[300px]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search products by name, brand, or barcode..."
@@ -932,7 +935,7 @@ export default function Products() {
           />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[200px]" data-testid="select-category">
+          <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-category">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
