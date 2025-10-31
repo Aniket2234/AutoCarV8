@@ -118,45 +118,35 @@ const editCustomerSchema = z.object({
   warrantyCard: z.string().optional(),
 });
 
-// Customer Card Component
-function CustomerCard({ 
+// Customer-Vehicle Card Component (shows one card per vehicle)
+function CustomerVehicleCard({ 
   customer, 
+  vehicle,
+  totalVehicles,
   isAdmin, 
   onEdit, 
   onDelete,
   onViewDetails 
 }: { 
   customer: Customer; 
+  vehicle: Vehicle;
+  totalVehicles: number;
   isAdmin: boolean; 
   onEdit: (customer: Customer) => void;
   onDelete: (customerId: string) => void;
   onViewDetails: (customer: Customer) => void;
 }) {
-  // Fetch vehicles for this customer
-  const { data: vehicles = [] } = useQuery<Vehicle[]>({
-    queryKey: ["/api/registration/customers", customer.id, "vehicles"],
-    queryFn: async () => {
-      const response = await fetch(`/api/registration/customers/${customer.id}/vehicles`, {
-        credentials: "include",
-      });
-      if (!response.ok) return [];
-      return response.json();
-    },
-  });
-
-  const primaryVehicle = vehicles[0];
-
   return (
-    <Card className="overflow-hidden border-2 border-orange-300 dark:border-orange-700" data-testid={`card-customer-${customer.id}`}>
+    <Card className="overflow-hidden border-2 border-orange-300 dark:border-orange-700" data-testid={`card-customer-vehicle-${customer.id}-${vehicle.id}`}>
       <CardContent className="p-0">
         {/* Vehicle Image */}
-        {primaryVehicle?.vehiclePhoto && (
+        {vehicle.vehiclePhoto && (
           <div className="w-full h-48 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950/30 dark:to-yellow-950/30 flex items-center justify-center border-2 border-orange-300 dark:border-orange-700">
             <img 
-              src={primaryVehicle.vehiclePhoto} 
-              alt={`${primaryVehicle.vehicleBrand} ${primaryVehicle.vehicleModel}`} 
+              src={vehicle.vehiclePhoto} 
+              alt={`${vehicle.vehicleBrand} ${vehicle.vehicleModel}`} 
               className="h-full w-full object-contain p-2"
-              data-testid={`img-vehicle-card-${customer.id}`}
+              data-testid={`img-vehicle-card-${vehicle.id}`}
             />
           </div>
         )}
@@ -166,20 +156,20 @@ function CustomerCard({
           {/* Header with name and status */}
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="font-semibold text-lg" data-testid={`text-name-${customer.id}`}>
+              <h3 className="font-semibold text-lg" data-testid={`text-name-${customer.id}-${vehicle.id}`}>
                 {customer.fullName}
               </h3>
-              <p className="text-xs text-muted-foreground font-mono" data-testid={`text-ref-${customer.id}`}>
+              <p className="text-xs text-muted-foreground font-mono" data-testid={`text-ref-${customer.id}-${vehicle.id}`}>
                 {customer.referenceCode}
               </p>
             </div>
             {customer.isVerified ? (
-              <Badge className="bg-green-600" data-testid={`badge-verified-${customer.id}`}>
+              <Badge className="bg-green-600" data-testid={`badge-verified-${customer.id}-${vehicle.id}`}>
                 <CheckCircle className="w-3 h-3 mr-1" />
                 Verified
               </Badge>
             ) : (
-              <Badge variant="secondary" data-testid={`badge-pending-${customer.id}`}>
+              <Badge variant="secondary" data-testid={`badge-pending-${customer.id}-${vehicle.id}`}>
                 <XCircle className="w-3 h-3 mr-1" />
                 Pending
               </Badge>
@@ -187,20 +177,18 @@ function CustomerCard({
           </div>
 
           {/* Vehicle Info */}
-          {primaryVehicle && (
-            <div className="flex items-center gap-2 text-sm">
-              <Car className="w-4 h-4 text-muted-foreground" />
-              <span className="font-medium">
-                {primaryVehicle.vehicleBrand} {primaryVehicle.vehicleModel}
-              </span>
-              <span className="text-muted-foreground">• {primaryVehicle.vehicleNumber}</span>
-              {vehicles.length > 1 && (
-                <Badge variant="outline" className="ml-auto" data-testid={`badge-vehicle-count-${customer.id}`}>
-                  +{vehicles.length - 1} more
-                </Badge>
-              )}
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-sm">
+            <Car className="w-4 h-4 text-muted-foreground" />
+            <span className="font-medium">
+              {vehicle.vehicleBrand} {vehicle.vehicleModel}
+            </span>
+            <span className="text-muted-foreground">• {vehicle.vehicleNumber}</span>
+            {totalVehicles > 1 && (
+              <Badge variant="outline" className="ml-auto" data-testid={`badge-total-vehicles-${customer.id}-${vehicle.id}`}>
+                {totalVehicles} vehicles
+              </Badge>
+            )}
+          </div>
 
           {/* Contact Info */}
           <div className="space-y-1 text-sm">
@@ -762,7 +750,14 @@ export default function CustomerRegistrationDashboard() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-2xl font-bold">Registered Customers</h2>
-            <p className="text-muted-foreground">{filteredCustomers.length} customers found</p>
+            <p className="text-muted-foreground">
+              {filteredCustomers.length} customers • {
+                filteredCustomers.reduce((total, customer) => {
+                  const customerVehicles = allVehicles.filter(v => v.customerId === customer.id);
+                  return total + customerVehicles.length;
+                }, 0)
+              } vehicles
+            </p>
           </div>
         </div>
         
@@ -776,19 +771,29 @@ export default function CustomerRegistrationDashboard() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredCustomers.map((customer) => (
-              <CustomerCard
-                key={customer.id}
-                customer={customer}
-                isAdmin={isAdmin}
-                onEdit={(customer) => {
-                  setEditingCustomer(customer);
-                  setEditDialogOpen(true);
-                }}
-                onDelete={(customerId) => deleteMutation.mutate(customerId)}
-                onViewDetails={(customer) => setSelectedCustomer(customer)}
-              />
-            ))}
+            {filteredCustomers.flatMap((customer) => {
+              const customerVehicles = allVehicles.filter(v => v.customerId === customer.id);
+              
+              if (customerVehicles.length === 0) {
+                return [];
+              }
+              
+              return customerVehicles.map((vehicle) => (
+                <CustomerVehicleCard
+                  key={`${customer.id}-${vehicle.id}`}
+                  customer={customer}
+                  vehicle={vehicle}
+                  totalVehicles={customerVehicles.length}
+                  isAdmin={isAdmin}
+                  onEdit={(customer) => {
+                    setEditingCustomer(customer);
+                    setEditDialogOpen(true);
+                  }}
+                  onDelete={(customerId) => deleteMutation.mutate(customerId)}
+                  onViewDetails={(customer) => setSelectedCustomer(customer)}
+                />
+              ));
+            })}
           </div>
         )}
 
