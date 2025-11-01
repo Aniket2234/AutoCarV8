@@ -25,3 +25,6 @@
 [x] 25. Fix User Management page header for mobile - ✅ Header stacks vertically, button full-width on mobile
 [x] 26. Re-configure environment secrets after fresh migration - ✅ MONGODB_URI, WHATSAPP_API_KEY, and WHATSAPP_PHONE_NUMBER_ID securely stored in Replit Secrets and verified (Nov 1, 2025)
 [x] 27. Fix port 5000 conflicts and restart workflow - ✅ Workflow restarted successfully, MongoDB connected, server serving on port 5000
+[x] 28. Fix WhatsApp invoice PDF URL for production deployment - ✅ Added APP_URL environment variable support with priority fallback (APP_URL > REPLIT_DEV_DOMAIN > localhost)
+[x] 29. Add comprehensive logging to invoice approval process - ✅ Detailed step-by-step logging added throughout approval, PDF generation, and WhatsApp notification
+[x] 30. Create production deployment documentation - ✅ PRODUCTION_DEPLOYMENT.md created with complete setup instructions for Putty/PM2 deployment

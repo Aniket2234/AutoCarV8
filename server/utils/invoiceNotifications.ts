@@ -77,22 +77,43 @@ export async function generateInvoicePDF(invoice: any): Promise<string> {
   try {
     console.log('📄 Generating invoice PDF...');
     console.log('   Invoice:', invoice.invoiceNumber);
+    console.log('   Invoice ID:', invoice._id);
     
     const pdfPath = await generatePDF(invoice);
     
-    const domain = process.env.REPLIT_DEV_DOMAIN || 'localhost:5000';
-    const protocol = process.env.REPLIT_DEV_DOMAIN ? 'https' : 'http';
+    // Priority: APP_URL (production) > REPLIT_DEV_DOMAIN (Replit) > localhost (local dev)
+    let baseUrl = '';
+    
+    if (process.env.APP_URL) {
+      // Production environment (e.g., https://crm.maulicardecor.com)
+      baseUrl = process.env.APP_URL.replace(/\/$/, ''); // Remove trailing slash
+      console.log('   Using APP_URL:', baseUrl);
+    } else if (process.env.REPLIT_DEV_DOMAIN) {
+      // Replit development environment
+      baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+      console.log('   Using REPLIT_DEV_DOMAIN:', baseUrl);
+    } else {
+      // Local development fallback
+      baseUrl = 'http://localhost:5000';
+      console.log('   Using localhost (development):', baseUrl);
+    }
+    
     const token = invoice.pdfAccessToken;
-    const pdfUrl = `${protocol}://${domain}/api/public/invoices/${invoice._id}/pdf?token=${token}`;
+    const pdfUrl = `${baseUrl}/api/public/invoices/${invoice._id}/pdf?token=${token}`;
     
     console.log('✅ PDF generated successfully');
     console.log('   Local path:', pdfPath);
     console.log('   Public URL:', pdfUrl);
+    console.log('   Access Token:', token ? `${token.substring(0, 12)}...` : 'MISSING');
     console.log('   Token expires:', invoice.pdfTokenExpiry);
+    console.log('   Current time:', new Date().toISOString());
+    console.log('   Token valid:', invoice.pdfTokenExpiry > new Date() ? '✅ Yes' : '❌ Expired');
     
     return pdfUrl;
   } catch (error) {
     console.error('❌ PDF generation failed:', error);
+    console.error('   Error details:', error instanceof Error ? error.message : String(error));
+    console.error('   Stack:', error instanceof Error ? error.stack : 'No stack trace');
     return '';
   }
 }

@@ -4416,31 +4416,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Approve invoice
   app.post("/api/invoices/:id/approve", requireAuth, requirePermission('invoices', 'approve'), async (req, res) => {
     try {
+      console.log('\n' + '='.repeat(80));
+      console.log('🔄 STARTING INVOICE APPROVAL PROCESS');
+      console.log('='.repeat(80));
+      
       const userId = (req as any).session.userId;
       const userName = (req as any).session.userName;
       const userRole = (req as any).session.userRole;
+      
+      console.log('📋 Request Details:');
+      console.log('   Invoice ID:', req.params.id);
+      console.log('   User ID:', userId);
+      console.log('   User Name:', userName);
+      console.log('   User Role:', userRole);
+      console.log('   Request IP:', req.ip);
       
       const invoice = await Invoice.findById(req.params.id)
         .populate('customerId')
         .populate('serviceVisitId');
       if (!invoice) {
+        console.log('❌ Invoice not found:', req.params.id);
         return res.status(404).json({ error: "Invoice not found" });
       }
       
+      console.log('✅ Invoice found:');
+      console.log('   Invoice Number:', invoice.invoiceNumber);
+      console.log('   Current Status:', invoice.status);
+      console.log('   Customer:', invoice.customerDetails?.fullName);
+      console.log('   Customer Phone:', invoice.customerDetails?.mobileNumber);
+      console.log('   Total Amount: ₹', invoice.totalAmount);
+      
       if (invoice.status !== 'pending_approval') {
-        console.log(`Invoice approval failed: Invoice ${req.params.id} has status "${invoice.status}", expected "pending_approval"`);
+        console.log(`❌ Invoice approval failed: Invoice ${req.params.id} has status "${invoice.status}", expected "pending_approval"`);
         return res.status(400).json({ 
           error: "Invoice is not pending approval", 
           currentStatus: invoice.status 
         });
       }
       
+      console.log('📝 Updating invoice status to "approved"...');
       invoice.status = 'approved';
       invoice.approvalStatus = {
         approvedBy: userId,
         approvedAt: new Date()
       } as any;
       
+      console.log('🔐 Generating secure PDF access token...');
       // Generate secure access token for WhatsApp PDF delivery BEFORE PDF generation
       const crypto = await import('crypto');
       invoice.pdfAccessToken = crypto.randomBytes(32).toString('hex');
@@ -4449,9 +4470,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       tokenExpiry.setDate(tokenExpiry.getDate() + 7);
       invoice.pdfTokenExpiry = tokenExpiry;
       
+      console.log('   Token generated:', invoice.pdfAccessToken.substring(0, 12) + '...');
+      console.log('   Token expires:', tokenExpiry.toISOString());
+      
+      console.log('💾 Saving invoice to database...');
       await invoice.save();
+      console.log('✅ Invoice saved successfully');
       
       // Generate PDF
+      console.log('📄 Starting PDF generation...');
       try {
         const pdfData = {
           invoiceNumber: invoice.invoiceNumber,
@@ -4481,14 +4508,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           terms: invoice.terms,
         };
 
+        console.log('   PDF Data prepared, generating file...');
         const pdfPath = await generateInvoicePDF(pdfData);
         invoice.pdfPath = pdfPath;
         await invoice.save();
+        console.log('✅ PDF generated and saved to:', pdfPath);
       } catch (pdfError) {
-        console.error('PDF generation error:', pdfError);
+        console.error('❌ PDF generation error:', pdfError);
+        console.error('   Error details:', pdfError instanceof Error ? pdfError.message : String(pdfError));
       }
       
       // Create warranties for items that have warranty enabled
+      console.log('🛡️ Creating warranties for items with warranty...');
       try {
         const warrantyPromises = invoice.items
           .filter((item: any) => item.hasWarranty && item.type === 'product')
@@ -4516,17 +4547,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
 
         await Promise.all(warrantyPromises);
+        console.log('✅ Warranties created successfully');
       } catch (warrantyError) {
-        console.error('Warranty creation error:', warrantyError);
+        console.error('❌ Warranty creation error:', warrantyError);
       }
       
       // Send WhatsApp and Email notifications with PDF (stub implementation)
+      console.log('📤 Sending WhatsApp and Email notifications...');
+      console.log('   Environment check:');
+      console.log('   - APP_URL:', process.env.APP_URL || 'NOT SET (will use fallback)');
+      console.log('   - REPLIT_DEV_DOMAIN:', process.env.REPLIT_DEV_DOMAIN || 'NOT SET');
+      console.log('   - NODE_ENV:', process.env.NODE_ENV);
+      
       try {
         await sendInvoiceNotifications(invoice);
+        console.log('✅ Notifications sent successfully');
       } catch (notificationError) {
-        console.error('Notification sending error:', notificationError);
+        console.error('❌ Notification sending error:', notificationError);
+        console.error('   Error details:', notificationError instanceof Error ? notificationError.message : String(notificationError));
+        console.error('   Stack:', notificationError instanceof Error ? notificationError.stack : 'No stack trace');
       }
       
+      console.log('📊 Logging activity...');
       try {
         await logActivity({
           userId,
@@ -4538,13 +4580,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description: `Approved invoice ${invoice.invoiceNumber}`,
           ipAddress: req.ip,
         });
+        console.log('✅ Activity logged successfully');
       } catch (activityError) {
-        console.error('Activity logging error:', activityError);
+        console.error('❌ Activity logging error:', activityError);
       }
+      
+      console.log('='.repeat(80));
+      console.log('✅ INVOICE APPROVAL PROCESS COMPLETED SUCCESSFULLY');
+      console.log('   Invoice Number:', invoice.invoiceNumber);
+      console.log('   Status:', invoice.status);
+      console.log('   Total Amount: ₹', invoice.totalAmount);
+      console.log('='.repeat(80) + '\n');
       
       res.json(invoice);
     } catch (error) {
-      console.error('Invoice approval error:', error);
+      console.error('\n' + '='.repeat(80));
+      console.error('❌ INVOICE APPROVAL PROCESS FAILED');
+      console.error('='.repeat(80));
+      console.error('Error:', error);
+      console.error('Error details:', error instanceof Error ? error.message : String(error));
+      console.error('Stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('='.repeat(80) + '\n');
       res.status(500).json({ error: "Failed to approve invoice", details: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
