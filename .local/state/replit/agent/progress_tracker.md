@@ -23,3 +23,5 @@
 [x] 23. Fix Service Details dialog for mobile - ✅ Responsive grids prevent horizontal scroll, buttons wrap properly
 [x] 24. Fix Reports page header for mobile - ✅ Header stacks vertically, select and buttons full-width on mobile
 [x] 25. Fix User Management page header for mobile - ✅ Header stacks vertically, button full-width on mobile
+[x] 26. Re-configure environment secrets after fresh migration - ✅ MONGODB_URI, WHATSAPP_API_KEY, and WHATSAPP_PHONE_NUMBER_ID securely stored in Replit Secrets and verified (Nov 1, 2025)
+[x] 27. Fix port 5000 conflicts and restart workflow - ✅ Workflow restarted successfully, MongoDB connected, server serving on port 5000
