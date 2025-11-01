@@ -4598,10 +4598,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).session.userId;
       const userName = (req as any).session.userName;
       const userRole = (req as any).session.userRole;
-      const { paymentStatus } = req.body;
+      const { paymentStatus, paymentMethod } = req.body;
       
       if (!paymentStatus || !['paid', 'unpaid', 'partial'].includes(paymentStatus)) {
         return res.status(400).json({ error: "Invalid payment status. Must be 'paid', 'unpaid', or 'partial'" });
+      }
+      
+      // Validate payment method when marking as paid
+      if (paymentStatus === 'paid' && paymentMethod) {
+        if (!['UPI', 'Cash', 'Card', 'Net Banking', 'Cheque'].includes(paymentMethod)) {
+          return res.status(400).json({ error: "Invalid payment method" });
+        }
       }
       
       const invoice = await Invoice.findById(req.params.id);
@@ -4620,9 +4627,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (paymentStatus === 'paid') {
         invoice.paidAmount = invoice.totalAmount;
         invoice.dueAmount = 0;
+        // Save payment method when marking as paid
+        if (paymentMethod) {
+          invoice.paymentMethod = paymentMethod;
+        }
       } else if (paymentStatus === 'unpaid') {
         invoice.paidAmount = 0;
         invoice.dueAmount = invoice.totalAmount;
+        // Clear payment method when marking as unpaid
+        invoice.paymentMethod = undefined;
       }
       
       await invoice.save();

@@ -103,6 +103,10 @@ const invoiceSchema = new mongoose.Schema({
     enum: ['unpaid', 'partial', 'paid'],
     default: 'unpaid'
   },
+  paymentMethod: {
+    type: String,
+    enum: ['UPI', 'Cash', 'Card', 'Net Banking', 'Cheque'],
+  },
   paidAmount: { type: Number, default: 0 },
   dueAmount: { type: Number, required: true },
   payments: [paymentEntrySchema],

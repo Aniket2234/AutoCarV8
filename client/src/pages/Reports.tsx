@@ -254,15 +254,15 @@ export default function Reports() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-3 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Reports & Analytics</h1>
-          <p className="text-muted-foreground mt-1">Business insights and performance metrics</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Reports & Analytics</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Business insights and performance metrics</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as ReportPeriod)}>
-            <SelectTrigger className="w-[180px]" data-testid="select-report-period">
+            <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-report-period">
               <SelectValue placeholder="Select period" />
             </SelectTrigger>
             <SelectContent>
@@ -272,7 +272,7 @@ export default function Reports() {
               <SelectItem value="year">This Year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => handleExport("all")} data-testid="button-export-report">
+          <Button variant="outline" onClick={() => handleExport("all")} data-testid="button-export-report" className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             Export All
           </Button>

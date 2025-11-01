@@ -285,19 +285,19 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto p-3 md:p-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Shield className="h-8 w-8" />
+          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <Shield className="h-6 w-6 md:h-8 md:w-8" />
             User Management
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             Manage user accounts and permissions. All employees have user accounts.
           </p>
         </div>
-        <Link href="/employees">
-          <Button data-testid="button-create-user">
+        <Link href="/employees" className="w-full md:w-auto">
+          <Button data-testid="button-create-user" className="w-full md:w-auto">
             <UserPlus className="h-4 w-4 mr-2" />
             Add Employee / User
           </Button>

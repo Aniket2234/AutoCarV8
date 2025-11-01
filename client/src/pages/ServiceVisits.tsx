@@ -728,7 +728,7 @@ export default function ServiceVisits() {
           
           {selectedService && (
             <div className="space-y-6">
-              <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Customer</Label>
                   <p className="text-sm font-medium" data-testid="view-customer">
@@ -756,7 +756,7 @@ export default function ServiceVisits() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Service Handlers</Label>
                   {selectedService.handlerIds && selectedService.handlerIds.length > 0 ? (
@@ -808,7 +808,7 @@ export default function ServiceVisits() {
               {selectedService.status === 'completed' && (selectedService.invoiceNumber || selectedService.invoiceDate) && (
                 <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
                   <Label className="text-sm font-medium text-green-900 dark:text-green-100">Invoice Details</Label>
-                  <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                     {selectedService.invoiceNumber && (
                       <div>
                         <Label className="text-xs text-green-700 dark:text-green-300">Invoice Number</Label>
@@ -837,7 +837,7 @@ export default function ServiceVisits() {
               )}
 
               {(selectedService.beforeImages?.length > 0 || selectedService.afterImages?.length > 0) && (
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Before Service Images</Label>
                     {selectedService.beforeImages && selectedService.beforeImages.length > 0 ? (
@@ -870,8 +870,8 @@ export default function ServiceVisits() {
                 </div>
               )}
 
-              <div className="flex justify-between gap-2 pt-4 border-t">
-                <div className="flex gap-2">
+              <div className="flex flex-col md:flex-row justify-between gap-2 pt-4 border-t">
+                <div className="flex gap-2 flex-wrap">
                   {selectedService?.status === 'completed' && hasPermission(user, 'invoices', 'create') && (
                     <Button
                       variant="default"
@@ -886,11 +886,12 @@ export default function ServiceVisits() {
                     </Button>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     onClick={() => setIsViewDialogOpen(false)}
                     data-testid="button-close-view"
+                    className="flex-1 md:flex-none"
                   >
                     Close
                   </Button>
@@ -900,6 +901,7 @@ export default function ServiceVisits() {
                       handleEditService(selectedService);
                     }}
                     data-testid="button-edit-from-view"
+                    className="flex-1 md:flex-none"
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Service

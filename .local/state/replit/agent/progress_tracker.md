@@ -18,3 +18,8 @@
 [x] 18. Remove Purchase Orders tab from Inventory Management - ✅ Tab removed from UI
 [x] 19. Fix 404 errors for /api/suppliers and /api/purchase-orders - ✅ Removed queries and all references to suppliers and purchase orders
 [x] 20. Re-configure environment secrets after migration - ✅ MONGODB_URI, WHATSAPP_API_KEY, and WHATSAPP_PHONE_NUMBER_ID securely stored in Replit Secrets (Nov 1, 2025)
+[x] 21. Add payment method selection when marking invoice as paid - ✅ Dialog prompts for payment method (UPI/Cash/Card/Net Banking/Cheque), displays method in invoice table
+[x] 22. Update backend to support payment method storage - ✅ Invoice schema and payment status route updated to handle paymentMethod field
+[x] 23. Fix Service Details dialog for mobile - ✅ Responsive grids prevent horizontal scroll, buttons wrap properly
+[x] 24. Fix Reports page header for mobile - ✅ Header stacks vertically, select and buttons full-width on mobile
+[x] 25. Fix User Management page header for mobile - ✅ Header stacks vertically, button full-width on mobile

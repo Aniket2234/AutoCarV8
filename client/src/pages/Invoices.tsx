@@ -28,6 +28,7 @@ interface Invoice {
   dueAmount: number;
   status: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'cancelled';
   paymentStatus: 'unpaid' | 'partial' | 'paid';
+  paymentMethod?: 'UPI' | 'Cash' | 'Card' | 'Net Banking' | 'Cheque';
   createdAt: string;
   createdBy: { name: string };
   approvalStatus?: {
@@ -50,6 +51,8 @@ export default function Invoices() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showWarrantyDialog, setShowWarrantyDialog] = useState(false);
+  const [showPaymentMethodDialog, setShowPaymentMethodDialog] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'UPI' | 'Cash' | 'Card' | 'Net Banking' | 'Cheque'>('Cash');
 
   const { data: invoices = [], isLoading } = useQuery<Invoice[]>({
     queryKey: ['/api/invoices', statusFilter, paymentFilter],
@@ -131,18 +134,45 @@ export default function Invoices() {
   });
 
   const togglePaidStatusMutation = useMutation({
-    mutationFn: ({ invoiceId, currentStatus }: { invoiceId: string; currentStatus: string }) => {
+    mutationFn: ({ invoiceId, currentStatus, paymentMethod }: { invoiceId: string; currentStatus: string; paymentMethod?: string }) => {
       const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
-      return apiRequest('PATCH', `/api/invoices/${invoiceId}/payment-status`, { paymentStatus: newStatus });
+      return apiRequest('PATCH', `/api/invoices/${invoiceId}/payment-status`, { 
+        paymentStatus: newStatus,
+        paymentMethod: newStatus === 'paid' ? paymentMethod : undefined
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
       toast({ title: "Payment status updated" });
+      setShowPaymentMethodDialog(false);
     },
     onError: () => {
       toast({ title: "Failed to update payment status", variant: "destructive" });
     },
   });
+
+  const handleMarkPaid = (invoice: Invoice) => {
+    if (invoice.paymentStatus === 'paid') {
+      togglePaidStatusMutation.mutate({ 
+        invoiceId: invoice._id, 
+        currentStatus: invoice.paymentStatus 
+      });
+    } else {
+      setSelectedInvoice(invoice);
+      setSelectedPaymentMethod('Cash');
+      setShowPaymentMethodDialog(true);
+    }
+  };
+
+  const confirmMarkPaid = () => {
+    if (selectedInvoice) {
+      togglePaidStatusMutation.mutate({
+        invoiceId: selectedInvoice._id,
+        currentStatus: selectedInvoice.paymentStatus,
+        paymentMethod: selectedPaymentMethod,
+      });
+    }
+  };
 
   const handleDownloadPDF = async (invoiceId: string) => {
     try {
@@ -299,9 +329,16 @@ export default function Invoices() {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2 flex-wrap items-center">
                       {getStatusBadge(invoice.status)}
-                      {getPaymentBadge(invoice.paymentStatus)}
+                      <div className="flex flex-col gap-1">
+                        {getPaymentBadge(invoice.paymentStatus)}
+                        {invoice.paymentStatus === 'paid' && invoice.paymentMethod && (
+                          <span className="text-xs text-muted-foreground" data-testid={`text-payment-method-mobile-${invoice._id}`}>
+                            via {invoice.paymentMethod}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="flex flex-wrap gap-2">
@@ -361,7 +398,7 @@ export default function Invoices() {
                         <Button
                           size="sm"
                           variant={invoice.paymentStatus === 'paid' ? 'secondary' : 'default'}
-                          onClick={() => togglePaidStatusMutation.mutate({ invoiceId: invoice._id, currentStatus: invoice.paymentStatus })}
+                          onClick={() => handleMarkPaid(invoice)}
                           disabled={togglePaidStatusMutation.isPending}
                           data-testid={`button-toggle-paid-${invoice._id}`}
                           className="flex-1"
@@ -448,7 +485,16 @@ export default function Invoices() {
                       <TableCell>₹{invoice.paidAmount.toLocaleString()}</TableCell>
                       <TableCell>₹{invoice.dueAmount.toLocaleString()}</TableCell>
                       <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                      <TableCell>{getPaymentBadge(invoice.paymentStatus)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          {getPaymentBadge(invoice.paymentStatus)}
+                          {invoice.paymentStatus === 'paid' && invoice.paymentMethod && (
+                            <span className="text-xs text-muted-foreground" data-testid={`text-payment-method-${invoice._id}`}>
+                              via {invoice.paymentMethod}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{format(new Date(invoice.createdAt), 'dd MMM yyyy')}</TableCell>
                       <TableCell className="text-right space-x-2">
                         {(user?.role === 'Admin' || user?.role === 'Manager') && invoice.status === 'pending_approval' && (
@@ -503,7 +549,7 @@ export default function Invoices() {
                           <Button
                             size="sm"
                             variant={invoice.paymentStatus === 'paid' ? 'secondary' : 'default'}
-                            onClick={() => togglePaidStatusMutation.mutate({ invoiceId: invoice._id, currentStatus: invoice.paymentStatus })}
+                            onClick={() => handleMarkPaid(invoice)}
                             disabled={togglePaidStatusMutation.isPending}
                             data-testid={`button-toggle-paid-${invoice._id}`}
                           >
@@ -632,6 +678,81 @@ export default function Invoices() {
               data-testid="button-confirm-delete"
             >
               {deleteMutation.isPending ? "Deleting..." : "Delete Invoice"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Method Selection Dialog */}
+      <Dialog open={showPaymentMethodDialog} onOpenChange={setShowPaymentMethodDialog}>
+        <DialogContent className="max-w-md" data-testid="dialog-payment-method">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Select Payment Method
+            </DialogTitle>
+            <DialogDescription>
+              Choose how the payment was received for invoice {selectedInvoice?.invoiceNumber}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <label className="text-sm font-medium">Payment Method</label>
+              <Select value={selectedPaymentMethod} onValueChange={(value: any) => setSelectedPaymentMethod(value)}>
+                <SelectTrigger data-testid="select-payment-method-dialog">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UPI">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-blue-600" />
+                      UPI
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Cash">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      Cash
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Card">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-purple-600" />
+                      Debit/Credit Card
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Net Banking">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-orange-600" />
+                      Net Banking
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Cheque">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-gray-600" />
+                      Cheque
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowPaymentMethodDialog(false)}
+              data-testid="button-cancel-payment-method"
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmMarkPaid}
+              disabled={togglePaidStatusMutation.isPending}
+              data-testid="button-confirm-payment-method"
+              className="w-full sm:w-auto"
+            >
+              {togglePaidStatusMutation.isPending ? "Processing..." : "Mark as Paid"}
             </Button>
           </DialogFooter>
         </DialogContent>
