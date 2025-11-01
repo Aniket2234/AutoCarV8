@@ -17,3 +17,4 @@
 [x] 17. Fix Analytics/Reports tabs and headers for mobile - ✅ All report headers stack vertically, tabs scroll horizontally
 [x] 18. Remove Purchase Orders tab from Inventory Management - ✅ Tab removed from UI
 [x] 19. Fix 404 errors for /api/suppliers and /api/purchase-orders - ✅ Removed queries and all references to suppliers and purchase orders
+[x] 20. Re-configure environment secrets after migration - ✅ MONGODB_URI, WHATSAPP_API_KEY, and WHATSAPP_PHONE_NUMBER_ID securely stored in Replit Secrets (Nov 1, 2025)
