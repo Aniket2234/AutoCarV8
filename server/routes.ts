@@ -4776,14 +4776,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Download invoice PDF with token (public endpoint for WhatsApp integration)
   app.get("/api/public/invoices/:id/pdf", async (req, res) => {
     try {
+      console.log('\n' + '='.repeat(80));
+      console.log('📥 PUBLIC PDF ACCESS REQUEST');
+      console.log('='.repeat(80));
+      console.log('   Invoice ID:', req.params.id);
+      console.log('   Token provided:', req.query.token ? String(req.query.token).substring(0, 12) + '...' : 'MISSING');
+      console.log('   User-Agent:', req.headers['user-agent'] || 'Not provided');
+      console.log('   IP Address:', req.ip || req.connection.remoteAddress);
+      console.log('   Timestamp:', new Date().toISOString());
+      
       const { token } = req.query;
       const invoice = await Invoice.findById(req.params.id).populate('serviceVisitId');
       
       if (!invoice) {
+        console.log('❌ Invoice not found:', req.params.id);
         return res.status(404).json({ error: "Invoice not found" });
       }
       
+      console.log('✅ Invoice found:', invoice.invoiceNumber);
+      console.log('   Status:', invoice.status);
+      
       if (invoice.status !== 'approved') {
+        console.log('❌ Invoice not approved. Current status:', invoice.status);
         return res.status(400).json({ error: "PDF can only be accessed for approved invoices" });
       }
       
@@ -4791,15 +4805,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expectedToken = invoice.pdfAccessToken;
       const tokenExpiry = invoice.pdfTokenExpiry;
       
+      console.log('🔐 Token Verification:');
+      console.log('   Expected token:', expectedToken ? expectedToken.substring(0, 12) + '...' : 'NOT SET');
+      console.log('   Token expiry:', tokenExpiry);
+      console.log('   Current time:', new Date());
+      console.log('   Token valid:', tokenExpiry && new Date() <= new Date(tokenExpiry) ? '✅' : '❌');
+      
       if (!expectedToken || expectedToken !== token) {
-        console.log('Invalid PDF access token for invoice:', invoice.invoiceNumber);
+        console.log('❌ TOKEN MISMATCH');
+        console.log('   Expected:', expectedToken);
+        console.log('   Received:', token);
+        console.log('='.repeat(80) + '\n');
         return res.status(403).json({ error: "Invalid or missing access token" });
       }
       
       if (tokenExpiry && new Date() > new Date(tokenExpiry)) {
-        console.log('Expired PDF access token for invoice:', invoice.invoiceNumber);
+        console.log('❌ TOKEN EXPIRED');
+        console.log('   Expired at:', tokenExpiry);
+        console.log('   Current time:', new Date());
+        console.log('='.repeat(80) + '\n');
         return res.status(403).json({ error: "Access token has expired" });
       }
+      
+      console.log('✅ Token verification passed');
       
       let pdfPath = invoice.pdfPath;
       
@@ -4837,17 +4865,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await invoice.save();
       }
       
+      console.log('📄 Streaming PDF file...');
+      console.log('   File path:', pdfPath);
+      console.log('   File exists:', fs.existsSync(pdfPath));
+      
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${invoice.invoiceNumber.replace(/\//g, '_')}.pdf"`);
       
       const fileStream = fs.createReadStream(pdfPath);
       fileStream.on('error', (error) => {
-        console.error('File stream error:', error);
+        console.error('❌ File stream error:', error);
+        console.log('='.repeat(80) + '\n');
         res.status(500).json({ error: "Failed to stream PDF" });
+      });
+      fileStream.on('end', () => {
+        console.log('✅ PDF successfully streamed to client');
+        console.log('='.repeat(80) + '\n');
       });
       fileStream.pipe(res);
     } catch (error) {
-      console.error('PDF download error:', error);
+      console.error('❌ PDF DOWNLOAD ERROR');
+      console.error('Error:', error);
+      console.error('Details:', error instanceof Error ? error.message : String(error));
+      console.log('='.repeat(80) + '\n');
       res.status(500).json({ error: "Failed to download PDF" });
     }
   });
