@@ -4,6 +4,7 @@ module.exports = {
     script: './dist/index.js',  // Run the built backend directly
     env: {
       NODE_ENV: 'production',
+      APP_URL: 'https://crm.maulicardecor.com',
       SESSION_SECRET: '8pSnCe9YF1FehlBI1YcX1Z2Z6r90x7zRd0yBM+CPTZaGwkurNBDzybjgretUTO4l9LT7wRLZln1jqnpqjtKECw==',
       MONGODB_URI: 'mongodb+srv://raneaniket23_db_user:c51rYLvbIEDGX1qc@autocrm.fuz97x1.mongodb.net/?retryWrites=true&w=majority&appName=AUTOCRM',
       WHATSAPP_PHONE_NUMBER_ID: '919970127778',
