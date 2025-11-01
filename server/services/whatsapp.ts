@@ -444,6 +444,7 @@ export async function sendWhatsAppInvoice({
   try {
     const startTime = Date.now();
     
+    // Template payload matching your WhatsApp Business template structure
     const payload = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
@@ -465,27 +466,6 @@ export async function sendWhatsAppInvoice({
                   caption: '',
                   filename: `Invoice_${invoiceNumber.replace(/\//g, '_')}.pdf`
                 }
-              }
-            ]
-          },
-          {
-            type: 'body',
-            parameters: [
-              {
-                type: 'text',
-                text: customerName
-              },
-              {
-                type: 'text',
-                text: invoiceNumber
-              },
-              {
-                type: 'text',
-                text: service
-              },
-              {
-                type: 'text',
-                text: totalAmount
               }
             ]
           }
