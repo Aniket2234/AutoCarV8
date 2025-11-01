@@ -789,8 +789,97 @@ export default function CustomerRegistrationDashboard() {
             {filteredCustomers.flatMap((customer) => {
               const customerVehicles = allVehicles.filter(v => v.customerId === customer.id);
               
+              // Show all customers, even those without vehicles
               if (customerVehicles.length === 0) {
-                return [];
+                // Create a placeholder card for customers without vehicles
+                return [(
+                  <Card key={customer.id} className="border-orange-200 dark:border-orange-800">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <User className="w-5 h-5" />
+                          <CardTitle className="text-lg">{customer.fullName}</CardTitle>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {customer.isVerified ? (
+                            <Badge variant="default" className="bg-green-500">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Verified
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Pending
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <CardDescription className="uppercase tracking-wide">
+                        {customer.referenceCode}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <span>{customer.mobileNumber}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        <span className="truncate">{customer.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        <span>{customer.city}, {customer.state}</span>
+                      </div>
+                      <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                        <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
+                          ⚠️ No vehicles registered
+                        </p>
+                        <p className="text-xs text-orange-600 dark:text-orange-500 mt-1">
+                          This customer has no vehicles. You can delete this record if it's a duplicate.
+                        </p>
+                      </div>
+                      {isAdmin && (
+                        <div className="flex gap-2 mt-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedCustomer(customer)}
+                            className="flex-1"
+                            data-testid={`button-view-${customer.id}`}
+                          >
+                            View Details
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                data-testid={`button-delete-${customer.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete {customer.fullName}? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteMutation.mutate(customer.id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )];
               }
               
               return customerVehicles.map((vehicle) => (

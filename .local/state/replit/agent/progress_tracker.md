@@ -35,3 +35,4 @@
 [x] 35. Create comprehensive WhatsApp troubleshooting guide - ✅ WHATSAPP_TROUBLESHOOTING.md created with diagnostic steps and template verification instructions (Nov 1, 2025)
 [x] 36. Create production deployment guide - ✅ DEPLOY_TO_PRODUCTION.md created with step-by-step PM2 deployment instructions (Nov 1, 2025)
 [x] 37. Verify Replit environment is working - ✅ Workflow running, MongoDB connected, server on port 5000, all secrets configured (Nov 1, 2025)
+[x] 38. Fix customer count issue - ✅ Updated CustomerRegistrationDashboard to show customers without vehicles (with orange warning card) so duplicates can be identified and deleted (Nov 1, 2025)
