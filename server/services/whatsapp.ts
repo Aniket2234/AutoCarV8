@@ -467,6 +467,27 @@ export async function sendWhatsAppInvoice({
                 }
               }
             ]
+          },
+          {
+            type: 'body',
+            parameters: [
+              {
+                type: 'text',
+                text: customerName
+              },
+              {
+                type: 'text',
+                text: invoiceNumber
+              },
+              {
+                type: 'text',
+                text: service
+              },
+              {
+                type: 'text',
+                text: totalAmount
+              }
+            ]
           }
         ]
       }
@@ -491,24 +512,40 @@ export async function sendWhatsAppInvoice({
     
     const data = await response.json();
 
-    console.log(`\n✅ WhatsApp Invoice Response (${responseTime}ms)`);
-    console.log('Status:', response.status);
-    console.log('Response:', JSON.stringify(data, null, 2));
+    console.log(`\n📥 WhatsApp Invoice API Response (${responseTime}ms)`);
+    console.log('================================');
+    console.log('HTTP Status:', response.status);
+    console.log('Response Data:', JSON.stringify(data, null, 2));
     console.log('================================\n');
 
-    if (data.success) {
+    // Check if API returned success
+    if (data.success === true || response.status === 200) {
+      console.log('✅ WhatsApp API reported SUCCESS');
+      console.log('   Status Description:', data.statusDesc || 'Message sent');
+      console.log('   Message ID:', data.data?.id || data.id || 'Not provided');
       return { 
         success: true, 
-        statusDesc: data.statusDesc,
+        statusDesc: data.statusDesc || 'Message sent successfully',
         data: data.data 
       };
     } else {
-      console.error('❌ WhatsApp API returned error:', data.statusDesc || data.error || 'Unknown error');
-      console.error('Error details:', JSON.stringify(data, null, 2));
+      console.error('❌ WhatsApp API returned FAILURE');
+      console.error('   Error:', data.statusDesc || data.error || data.message || 'Unknown error');
+      console.error('   Status Code:', data.statusCode || response.status);
+      console.error('   Full Response:', JSON.stringify(data, null, 2));
+      
+      // Check for common errors
+      if (data.error?.message) {
+        console.error('   Detailed Error Message:', data.error.message);
+      }
+      if (data.error?.error_data) {
+        console.error('   Error Data:', JSON.stringify(data.error.error_data, null, 2));
+      }
+      
       return { 
         success: false, 
-        error: data.statusDesc || data.error || 'Failed to send WhatsApp invoice template',
-        statusCode: data.statusCode
+        error: data.statusDesc || data.error?.message || data.message || 'Failed to send WhatsApp invoice',
+        statusCode: data.statusCode || response.status
       };
     }
   } catch (error) {
