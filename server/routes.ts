@@ -1332,31 +1332,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Product IDs to fetch:', vehicle.selectedParts);
 
       const mongoose = await import('mongoose');
-      const productIdsOnly = vehicle.selectedParts.filter((id: string) => {
+      const productIdsForDb: string[] = [];
+      const originalToStripped = new Map<string, string>();
+      
+      vehicle.selectedParts.forEach((id: string) => {
+        const mongoId = id.startsWith('product-') ? id.replace('product-', '') : id;
         try {
-          new mongoose.Types.ObjectId(id);
-          return true;
+          new mongoose.Types.ObjectId(mongoId);
+          productIdsForDb.push(mongoId);
+          originalToStripped.set(id, mongoId);
         } catch {
-          return false;
         }
       });
 
       const dbProducts = await Product.find({ 
-        _id: { $in: productIdsOnly },
+        _id: { $in: productIdsForDb },
         status: { $nin: ['discontinued'] }
       }).limit(20);
 
       console.log('✅ Found', dbProducts.length, 'products from database');
 
       const { getPartById } = await import('@shared/vehicleData');
-      const predefinedPartIds = vehicle.selectedParts.filter((id: string) => {
-        try {
-          new mongoose.Types.ObjectId(id);
-          return false;
-        } catch {
-          return true;
-        }
-      });
+      const foundDbProductIds = new Set(dbProducts.map(p => p._id.toString()));
+      const foundDbProductOriginalIds = Array.from(originalToStripped.entries())
+        .filter(([_, mongoId]) => foundDbProductIds.has(mongoId))
+        .map(([originalId, _]) => originalId);
+      
+      const predefinedPartIds = vehicle.selectedParts.filter((id: string) => 
+        !foundDbProductOriginalIds.includes(id)
+      );
 
       const predefinedProducts = predefinedPartIds
         .map((partId: string) => {
