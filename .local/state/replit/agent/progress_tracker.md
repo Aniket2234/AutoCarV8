@@ -37,3 +37,4 @@
 [x] 37. Verify Replit environment is working - ✅ Workflow running, MongoDB connected, server on port 5000, all secrets configured (Nov 1, 2025)
 [x] 38. Fix customer count issue - ✅ Updated CustomerRegistrationDashboard to show customers without vehicles (with orange warning card) so duplicates can be identified and deleted (Nov 1, 2025)
 [x] 39. Complete latest migration to Replit environment - ✅ Installed npm packages, configured environment secrets in .env, set up workflow with webview on port 5000, verified MongoDB connection and server running (Nov 3, 2025)
+[x] 40. Re-migrate project with secure credential storage - ✅ Installed npm packages, securely stored MONGODB_URI/WHATSAPP_API_KEY/WHATSAPP_PHONE_NUMBER_ID in Replit Secrets, cleared port 5000, restarted workflow, verified MongoDB connection and server running on port 5000 (Nov 3, 2025)
