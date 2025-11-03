@@ -299,7 +299,7 @@ export default function CustomerRegistrationDashboard() {
   
   // Get selected shop from localStorage
   const selectedShopId = localStorage.getItem('selectedShop');
-  const shopName = selectedShopId === 'beed' ? 'Shop A - Beed' : selectedShopId === 'ahilyanagar' ? 'Shop B - Ahilyanagar' : 'Shop Not Selected';
+  const shopName = selectedShopId === 'beed' ? 'Shop A - Beed' : selectedShopId === 'ahilyanagar' ? 'Shop B - Chhatrapati Sambhaji Nagar' : 'Shop Not Selected';
 
   // Fetch all customers
   const { data: customers = [], isLoading } = useQuery<Customer[]>({

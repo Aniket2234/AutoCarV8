@@ -85,7 +85,7 @@ export default function Dashboard() {
   
   // Get selected shop from localStorage
   const selectedShopId = localStorage.getItem('selectedShop');
-  const shopName = selectedShopId === 'beed' ? 'Shop A - Beed' : selectedShopId === 'ahilyanagar' ? 'Shop B - Ahilyanagar' : 'Shop Not Selected';
+  const shopName = selectedShopId === 'beed' ? 'Shop A - Beed' : selectedShopId === 'ahilyanagar' ? 'Shop B - Chhatrapati Sambhaji Nagar' : 'Shop Not Selected';
 
   const { data: dashboardStats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard-stats"],

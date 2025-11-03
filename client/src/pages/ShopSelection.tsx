@@ -22,7 +22,7 @@ const shops: ShopOption[] = [
   {
     id: 'ahilyanagar',
     name: 'Shop B',
-    location: 'Ahilyanagar',
+    location: 'Chhatrapati Sambhaji Nagar',
   },
 ];
 
