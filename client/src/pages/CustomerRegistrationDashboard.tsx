@@ -367,6 +367,31 @@ export default function CustomerRegistrationDashboard() {
     },
     enabled: !!selectedCustomer?.id,
   });
+
+  // Fetch products for customer vehicles
+  const allCustomerVehiclePartIds = customerVehicles.flatMap(v => v.selectedParts || []);
+  const { data: customerVehicleProductsData, isLoading: loadingProducts } = useQuery<{
+    products: Array<{
+      id: string;
+      name: string;
+      category: string;
+      price: number;
+      warranty?: string;
+      source: string;
+    }>;
+    notFound: string[];
+  }>({
+    queryKey: ['/api/products/resolve-by-ids', JSON.stringify(allCustomerVehiclePartIds)],
+    enabled: allCustomerVehiclePartIds.length > 0,
+    queryFn: async () => {
+      const response = await apiRequest('POST', '/api/products/resolve-by-ids', { productIds: allCustomerVehiclePartIds });
+      return response.json();
+    }
+  });
+
+  const productMap = new Map(
+    customerVehicleProductsData?.products.map((p: any) => [p.id, p]) || []
+  );
   
   // Fetch editing customer vehicles
   const { data: editingVehicles = [] } = useQuery<Vehicle[]>({
