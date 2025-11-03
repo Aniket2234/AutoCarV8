@@ -29,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import * as XLSX from "xlsx";
+import { VEHICLE_DATA } from "@shared/vehicleData";
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -729,24 +730,84 @@ export default function Products() {
 
       <div className="space-y-2">
         <Label>Model Compatibility</Label>
+        <p className="text-xs text-muted-foreground">
+          Select vehicle brands and models this product is compatible with
+        </p>
         {formData.modelCompatibility.map((model, index) => (
-          <div key={index} className="flex gap-2">
-            <Input
-              value={model}
-              onChange={(e) => updateModelCompat(index, e.target.value)}
-              placeholder="Compatible model"
-              data-testid={`input-model-${index}`}
-            />
-            {formData.modelCompatibility.length > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => removeModelCompat(index)}
-                data-testid={`button-remove-model-${index}`}
+          <div key={index} className="space-y-2">
+            <div className="flex gap-2">
+              <Select
+                value={model.startsWith('Other:') || !VEHICLE_DATA.some(brand => 
+                  brand.models.some(m => model === `${brand.name} - ${m.name}`)
+                ) ? 'Other' : model.split(' - ')[0] || ''}
+                onValueChange={(brand) => {
+                  if (brand === 'Other') {
+                    updateModelCompat(index, 'Other: ');
+                  } else {
+                    updateModelCompat(index, '');
+                  }
+                }}
               >
-                <X className="h-4 w-4" />
-              </Button>
+                <SelectTrigger className="w-[200px]" data-testid={`select-brand-${index}`}>
+                  <SelectValue placeholder="Select brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {VEHICLE_DATA.map((brand) => (
+                    <SelectItem key={brand.name} value={brand.name}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="Other">Other (Custom)</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {model && !model.startsWith('Other:') && VEHICLE_DATA.find(b => b.name === model.split(' - ')[0]) && (
+                <Select
+                  value={model.split(' - ')[1] || ''}
+                  onValueChange={(modelName) => {
+                    const brand = model.split(' - ')[0];
+                    updateModelCompat(index, `${brand} - ${modelName}`);
+                  }}
+                >
+                  <SelectTrigger className="flex-1" data-testid={`select-model-${index}`}>
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VEHICLE_DATA.find(b => b.name === model.split(' - ')[0])?.models.map((m) => (
+                      <SelectItem key={m.name} value={m.name}>
+                        {m.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              
+              {model.startsWith('Other:') && (
+                <Input
+                  value={model.replace('Other: ', '')}
+                  onChange={(e) => updateModelCompat(index, `Other: ${e.target.value}`)}
+                  placeholder="Enter custom compatibility"
+                  className="flex-1"
+                  data-testid={`input-custom-model-${index}`}
+                />
+              )}
+              
+              {formData.modelCompatibility.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => removeModelCompat(index)}
+                  data-testid={`button-remove-model-${index}`}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            {model && !model.startsWith('Other:') && model.includes(' - ') && (
+              <p className="text-xs text-green-600">
+                ✓ Selected: {model}
+              </p>
             )}
           </div>
         ))}
@@ -758,7 +819,7 @@ export default function Products() {
           data-testid="button-add-model"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Model
+          Add Another Vehicle
         </Button>
       </div>
 
