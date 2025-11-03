@@ -176,6 +176,44 @@ export default function CustomerRegistration() {
     },
   });
 
+  // Watch custom model input for compatibility matching
+  const customModelValue = vehicleForm.watch("customModel");
+
+  // Fetch compatible products based on selected vehicle brand and model
+  const { data: compatibleProducts = [] } = useQuery<any[]>({
+    queryKey: ['/api/products', selectedBrand, selectedModel, customModelValue],
+    queryFn: async () => {
+      if (!selectedBrand || !selectedModel) {
+        return [];
+      }
+      
+      // Build the vehicle key based on whether a custom model is being used
+      let vehicleKey: string;
+      if (selectedModel === "Other" && customModelValue) {
+        // For custom models under a known brand, use "Brand - CustomModel" format
+        vehicleKey = `${selectedBrand} - ${customModelValue}`;
+      } else {
+        // For standard models, use "Brand - Model" format
+        vehicleKey = `${selectedBrand} - ${selectedModel}`;
+      }
+      
+      const response = await fetch('/api/products', {
+        credentials: 'include',
+      });
+      if (!response.ok) return [];
+      const allProducts = await response.json();
+      
+      // Filter products that have this exact vehicle in their modelCompatibility
+      return allProducts.filter((product: any) => 
+        product.modelCompatibility && 
+        product.modelCompatibility.some((compat: string) => 
+          compat === vehicleKey
+        )
+      );
+    },
+    enabled: !!selectedBrand && !!selectedModel && (selectedModel !== "Other" || !!customModelValue),
+  });
+
   // Register customer mutation
   const registerCustomer = useMutation({
     mutationFn: async (data: CustomerFormData) => {
@@ -1144,6 +1182,49 @@ export default function CustomerRegistration() {
                         </FormItem>
                       )}
                     />
+                  )}
+
+                  {compatibleProducts.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="border-t pt-4">
+                        <h3 className="text-base font-semibold mb-2">
+                          Compatible Products for {selectedBrand} {selectedModel}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          These products are specifically compatible with your vehicle
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/10">
+                          {compatibleProducts.map((product) => (
+                            <div
+                              key={product._id}
+                              className="flex items-start space-x-3 p-3 border rounded-md bg-background hover:bg-muted/50 transition-colors"
+                            >
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">{product.name}</p>
+                                <p className="text-xs text-muted-foreground">{product.brand} - {product.category}</p>
+                                {product.modelCompatibility && (
+                                  <p className="text-xs text-green-600 mt-1">
+                                    ✓ Compatible with: {product.modelCompatibility.map((c: string) => 
+                                      c.startsWith('Other:') ? c.replace('Other: ', 'Custom: ') : c
+                                    ).join(', ')}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className="text-sm font-semibold text-primary">
+                                    ₹{product.sellingPrice}
+                                  </span>
+                                  {product.stockQty > 0 ? (
+                                    <span className="text-xs text-green-600">In Stock</span>
+                                  ) : (
+                                    <span className="text-xs text-red-600">Out of Stock</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   )}
 
                   <FormField
