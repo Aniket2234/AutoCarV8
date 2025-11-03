@@ -738,22 +738,18 @@ export default function Products() {
             <div className="flex gap-2">
               <Select
                 value={
-                  model.startsWith('Other:') 
-                    ? 'Other' 
+                  model.startsWith('Other:') || model === '' 
+                    ? '' 
                     : model.includes(' - ') 
                       ? model.split(' - ')[0] 
-                      : model || ''
+                      : model
                 }
                 onValueChange={(brand) => {
-                  if (brand === 'Other') {
-                    updateModelCompat(index, 'Other: ');
-                  } else {
-                    updateModelCompat(index, brand);
-                  }
+                  updateModelCompat(index, brand);
                 }}
               >
                 <SelectTrigger className="w-[200px]" data-testid={`select-brand-${index}`}>
-                  <SelectValue placeholder="Select brand" />
+                  <SelectValue placeholder="Other (Custom)" />
                 </SelectTrigger>
                 <SelectContent>
                   {VEHICLE_DATA.map((brand) => (
@@ -761,7 +757,6 @@ export default function Products() {
                       {brand.name}
                     </SelectItem>
                   ))}
-                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -787,7 +782,7 @@ export default function Products() {
                 </Select>
               )}
               
-              {model.startsWith('Other:') && (
+              {(model.startsWith('Other:') || model === '') && (
                 <Input
                   value={model.replace('Other: ', '')}
                   onChange={(e) => updateModelCompat(index, `Other: ${e.target.value}`)}
