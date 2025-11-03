@@ -737,9 +737,13 @@ export default function Products() {
           <div key={index} className="space-y-2">
             <div className="flex gap-2">
               <Select
-                value={model.startsWith('Other:') || !VEHICLE_DATA.some(brand => 
-                  brand.models.some(m => model === `${brand.name} - ${m.name}`)
-                ) ? 'Other' : model.split(' - ')[0] || ''}
+                value={
+                  model.startsWith('Other:') 
+                    ? 'Other' 
+                    : model.includes(' - ') 
+                      ? model.split(' - ')[0] 
+                      : model || ''
+                }
                 onValueChange={(brand) => {
                   if (brand === 'Other') {
                     updateModelCompat(index, 'Other: ');
@@ -761,11 +765,11 @@ export default function Products() {
                 </SelectContent>
               </Select>
               
-              {model && !model.startsWith('Other:') && VEHICLE_DATA.find(b => b.name === model.split(' - ')[0]) && (
+              {model && !model.startsWith('Other:') && model !== '' && VEHICLE_DATA.find(b => b.name === (model.includes(' - ') ? model.split(' - ')[0] : model)) && (
                 <Select
-                  value={model.split(' - ')[1] || ''}
+                  value={model.includes(' - ') ? model.split(' - ')[1] : ''}
                   onValueChange={(modelName) => {
-                    const brand = model.split(' - ')[0];
+                    const brand = model.includes(' - ') ? model.split(' - ')[0] : model;
                     updateModelCompat(index, `${brand} - ${modelName}`);
                   }}
                 >
@@ -773,11 +777,12 @@ export default function Products() {
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent>
-                    {VEHICLE_DATA.find(b => b.name === model.split(' - ')[0])?.models.map((m) => (
+                    {VEHICLE_DATA.find(b => b.name === (model.includes(' - ') ? model.split(' - ')[0] : model))?.models.filter(m => m.name !== 'Other').map((m) => (
                       <SelectItem key={m.name} value={m.name}>
                         {m.name}
                       </SelectItem>
                     ))}
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               )}
