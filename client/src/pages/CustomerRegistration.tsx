@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -213,6 +213,27 @@ export default function CustomerRegistration() {
     },
     enabled: !!selectedBrand && !!selectedModel && (selectedModel !== "Other" || !!customModelValue),
   });
+
+  // Merge standard parts with compatible products whenever they change
+  useEffect(() => {
+    if (selectedModel && selectedModel !== "Other") {
+      const standardParts = getPartsByBrandAndModel(selectedBrand, selectedModel);
+      
+      // Transform compatible products to match the part format
+      const productParts = compatibleProducts.map((product: any) => ({
+        id: `product-${product._id}`,
+        name: product.name,
+        category: product.category,
+        isProduct: true,
+        productId: product._id,
+        price: product.sellingPrice,
+        stockQty: product.stockQty,
+      }));
+      
+      // Combine both lists
+      setAvailableParts([...standardParts, ...productParts]);
+    }
+  }, [selectedBrand, selectedModel, compatibleProducts]);
 
   // Register customer mutation
   const registerCustomer = useMutation({
@@ -980,10 +1001,6 @@ export default function CustomerRegistration() {
                             onValueChange={(value) => {
                               field.onChange(value);
                               setSelectedModel(value);
-                              if (value !== "Other") {
-                                const parts = getPartsByBrandAndModel(selectedBrand, value);
-                                setAvailableParts(parts);
-                              }
                             }} 
                             defaultValue={field.value}
                             disabled={!selectedBrand}
