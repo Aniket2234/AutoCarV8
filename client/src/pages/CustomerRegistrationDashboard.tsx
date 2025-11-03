@@ -295,7 +295,7 @@ export default function CustomerRegistrationDashboard() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   
-  const isAdmin = user?.role === 'Admin';
+  const isAdmin = user?.role === 'Admin' || user?.role === 'Manager';
   
   // Get selected shop from localStorage
   const selectedShopId = localStorage.getItem('selectedShop');

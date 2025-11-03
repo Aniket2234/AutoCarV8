@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { queryClient } from '@/lib/queryClient';
 import { Link } from 'wouter';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
+import { useAuth } from '@/lib/auth';
 
 interface User {
   _id: string;
@@ -27,6 +28,7 @@ const roles = ['Admin', 'Manager', 'Inventory Manager', 'Sales Executive', 'HR M
 
 export default function UserManagement() {
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -547,14 +549,25 @@ export default function UserManagement() {
               </>
             )}
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is-active"
-                checked={formData.isActive}
-                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                data-testid="switch-active"
-              />
-              <Label htmlFor="is-active">Active</Label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is-active"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                  disabled={
+                    selectedUser?.role === 'Admin' && 
+                    currentUser?.role !== 'Admin'
+                  }
+                  data-testid="switch-active"
+                />
+                <Label htmlFor="is-active">Active</Label>
+              </div>
+              {selectedUser?.role === 'Admin' && currentUser?.role !== 'Admin' && (
+                <p className="text-xs text-muted-foreground">
+                  Only Admins can toggle the active status of Admin users
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
