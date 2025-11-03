@@ -681,10 +681,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let productData = null;
         
         try {
-          const dbProduct = await Product.findById(productId);
+          const mongoId = productId.startsWith('product-') ? productId.replace('product-', '') : productId;
+          const dbProduct = await Product.findById(mongoId);
           if (dbProduct) {
             productData = {
-              id: dbProduct._id.toString(),
+              id: productId,
               name: dbProduct.name,
               category: dbProduct.category,
               brand: dbProduct.brand,
