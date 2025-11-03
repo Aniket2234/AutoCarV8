@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const invoiceItemSchema = new mongoose.Schema({
   type: { type: String, enum: ['product', 'service'], required: true },
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  productId: { type: String },
   name: { type: String, required: true },
   description: { type: String },
   quantity: { type: Number, required: true },

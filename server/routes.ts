@@ -2024,8 +2024,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Admin sees everything (has permissions for all resources)
       if (userRole === 'Admin') {
-        const todayOrders = await Order.find({ createdAt: { $gte: today } });
-        stats.todaySales = todayOrders.reduce((sum, order) => sum + order.total, 0);
+        const todayInvoices = await Invoice.find({ 
+          createdAt: { $gte: today },
+          paymentStatus: { $in: ['paid', 'partial'] }
+        });
+        stats.todaySales = todayInvoices.reduce((sum, invoice) => sum + (invoice.paidAmount || 0), 0);
         stats.activeServices = await ServiceVisit.countDocuments({ 
           status: { $in: ['inquired', 'working', 'waiting'] } 
         });
@@ -2039,8 +2042,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Manager sees all sections (comprehensive stats like Admin)
       else if (userRole === 'Manager') {
-        const todayOrders = await Order.find({ createdAt: { $gte: today } });
-        stats.todaySales = todayOrders.reduce((sum, order) => sum + order.total, 0);
+        const todayInvoices = await Invoice.find({ 
+          createdAt: { $gte: today },
+          paymentStatus: { $in: ['paid', 'partial'] }
+        });
+        stats.todaySales = todayInvoices.reduce((sum, invoice) => sum + (invoice.paidAmount || 0), 0);
         stats.activeServices = await ServiceVisit.countDocuments({ 
           status: { $in: ['inquired', 'working', 'waiting'] } 
         });
