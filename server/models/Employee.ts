@@ -10,7 +10,6 @@ const employeeSchema = new mongoose.Schema({
   },
   contact: { type: String, required: true },
   email: { type: String },
-  department: { type: String },
   salary: { type: Number },
   joiningDate: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },

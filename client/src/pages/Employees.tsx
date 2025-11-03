@@ -24,7 +24,6 @@ interface Employee {
   role: string;
   contact: string;
   email?: string;
-  department?: string;
   salary?: number;
   joiningDate: string;
   isActive: boolean;
@@ -65,7 +64,6 @@ export default function Employees() {
     phone: "",
     password: "",
     role: "",
-    department: "",
     salary: "",
     joiningDate: "",
     panNumber: "",
@@ -73,6 +71,23 @@ export default function Employees() {
     photo: "",
     documents: [] as string[],
   });
+
+  const validatePanNumber = (pan: string): boolean => {
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    return panRegex.test(pan.toUpperCase());
+  };
+
+  const validateAadharNumber = (aadhar: string): boolean => {
+    const cleanedAadhar = aadhar.replace(/\s/g, '');
+    return /^\d{12}$/.test(cleanedAadhar);
+  };
+
+  const formatAadharNumber = (value: string): string => {
+    const cleaned = value.replace(/\D/g, '');
+    const limited = cleaned.slice(0, 12);
+    const parts = limited.match(/.{1,4}/g);
+    return parts ? parts.join(' ') : limited;
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -298,6 +313,15 @@ export default function Employees() {
       });
       return;
     }
+
+    if (!formData.photo) {
+      toast({
+        title: "Photo Required",
+        description: "Please upload employee photo before creating the employee",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const payload: any = {
       name: formData.name,
@@ -310,8 +334,34 @@ export default function Employees() {
     };
     
     if (formData.role !== 'Admin') {
-      payload.department = formData.department;
-      payload.panNumber = formData.panNumber;
+      if (!formData.panNumber || !validatePanNumber(formData.panNumber)) {
+        toast({
+          title: "Invalid PAN",
+          description: "Please enter a valid PAN number (e.g., ABCDE1234F)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!formData.aadharNumber || !validateAadharNumber(formData.aadharNumber)) {
+        toast({
+          title: "Invalid Aadhar",
+          description: "Please enter a valid 12-digit Aadhar number",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (formData.documents.length === 0) {
+        toast({
+          title: "Documents Required",
+          description: "Please upload at least one document (Aadhar or PAN card)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      payload.panNumber = formData.panNumber.toUpperCase();
       payload.aadharNumber = formData.aadharNumber;
       payload.documents = formData.documents;
       payload.salary = parseFloat(formData.salary);
@@ -337,7 +387,6 @@ export default function Employees() {
       phone: employee.contact,
       password: "",
       role: employee.role,
-      department: employee.department || "",
       salary: employee.salary ? employee.salary.toString() : "",
       joiningDate: employee.joiningDate ? employee.joiningDate.split('T')[0] : "",
       panNumber: employee.panNumber || "",
@@ -363,6 +412,15 @@ export default function Employees() {
       });
       return;
     }
+
+    if (!formData.photo) {
+      toast({
+        title: "Photo Required",
+        description: "Please upload employee photo before updating the employee",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const updateData: any = {
       name: formData.name,
@@ -373,8 +431,34 @@ export default function Employees() {
     };
     
     if (formData.role !== 'Admin') {
-      updateData.department = formData.department;
-      updateData.panNumber = formData.panNumber;
+      if (!formData.panNumber || !validatePanNumber(formData.panNumber)) {
+        toast({
+          title: "Invalid PAN",
+          description: "Please enter a valid PAN number (e.g., ABCDE1234F)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!formData.aadharNumber || !validateAadharNumber(formData.aadharNumber)) {
+        toast({
+          title: "Invalid Aadhar",
+          description: "Please enter a valid 12-digit Aadhar number",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (formData.documents.length === 0) {
+        toast({
+          title: "Documents Required",
+          description: "Please upload at least one document (Aadhar or PAN card)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      updateData.panNumber = formData.panNumber.toUpperCase();
       updateData.aadharNumber = formData.aadharNumber;
       updateData.documents = formData.documents;
       updateData.salary = parseFloat(formData.salary);
@@ -446,7 +530,6 @@ export default function Employees() {
       phone: "",
       password: "",
       role: "",
-      department: "",
       salary: "",
       joiningDate: "",
       panNumber: "",
@@ -493,8 +576,7 @@ export default function Employees() {
       emp.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (emp.email && emp.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (emp.employeeId && emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (emp.department && emp.department.toLowerCase().includes(searchTerm.toLowerCase()))
+      (emp.employeeId && emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .sort((a, b) => {
       switch (sortBy) {
@@ -637,14 +719,16 @@ export default function Employees() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="photo">Employee Photo</Label>
+                <Label htmlFor="photo">Employee Photo *</Label>
                 <Input
                   id="photo"
                   type="file"
                   accept="image/*"
                   onChange={handlePhotoUpload}
+                  required={!formData.photo}
                   data-testid="input-employee-photo"
                 />
+                <p className="text-xs text-muted-foreground">Required: Upload a photo of the employee</p>
                 {formData.photo && (
                   <div className="flex items-center gap-4 mt-2">
                     <img 
@@ -735,20 +819,6 @@ export default function Employees() {
               </div>
 
               {formData.role !== 'Admin' && (
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department *</Label>
-                  <Input
-                    id="department"
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    required
-                    placeholder="e.g., Service, Sales"
-                    data-testid="input-employee-department"
-                  />
-                </div>
-              )}
-
-              {formData.role !== 'Admin' && (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="salary">Salary *</Label>
@@ -777,29 +847,35 @@ export default function Employees() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="panNumber">PAN Number</Label>
+                      <Label htmlFor="panNumber">PAN Number *</Label>
                       <Input
                         id="panNumber"
                         value={formData.panNumber}
-                        onChange={(e) => setFormData({ ...formData, panNumber: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, panNumber: e.target.value.toUpperCase() })}
                         placeholder="ABCDE1234F"
+                        maxLength={10}
+                        required
                         data-testid="input-employee-pan"
                       />
+                      <p className="text-xs text-muted-foreground">Format: 10 alphanumeric characters (e.g., ABCDE1234F)</p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="aadharNumber">Aadhar Number</Label>
+                      <Label htmlFor="aadharNumber">Aadhar Number *</Label>
                       <Input
                         id="aadharNumber"
                         value={formData.aadharNumber}
-                        onChange={(e) => setFormData({ ...formData, aadharNumber: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, aadharNumber: formatAadharNumber(e.target.value) })}
                         placeholder="1234 5678 9012"
+                        maxLength={14}
+                        required
                         data-testid="input-employee-aadhar"
                       />
+                      <p className="text-xs text-muted-foreground">Format: 12 digits with spaces (e.g., 1234 5678 9012)</p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="documents">Upload Documents (PDF)</Label>
+                    <Label htmlFor="documents">Upload Documents (PDF) *</Label>
                     <Input
                       id="documents"
                       type="file"
@@ -808,6 +884,9 @@ export default function Employees() {
                       onChange={handleFileUpload}
                       data-testid="input-employee-documents"
                     />
+                    <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                      Note: Please upload at least one document - Aadhar card or PAN card (Required)
+                    </p>
                     {formData.documents.length > 0 && (
                       <div className="space-y-2 mt-2">
                         <p className="text-sm text-muted-foreground">Uploaded files ({formData.documents.length}):</p>
@@ -1111,13 +1190,15 @@ export default function Employees() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-photo">Employee Photo</Label>
+              <Label htmlFor="edit-photo">Employee Photo *</Label>
               <Input
                 id="edit-photo"
                 type="file"
                 accept="image/*"
                 onChange={handlePhotoUpload}
+                required={!formData.photo}
               />
+              <p className="text-xs text-muted-foreground">Required: Upload a photo of the employee</p>
               {formData.photo && (
                 <div className="flex items-center gap-4 mt-2">
                   <img 
@@ -1206,18 +1287,6 @@ export default function Employees() {
               </div>
             </div>
             {formData.role !== 'Admin' && (
-              <div className="space-y-2">
-                <Label htmlFor="edit-department">Department *</Label>
-                <Input
-                  id="edit-department"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  required
-                />
-              </div>
-            )}
-
-            {formData.role !== 'Admin' && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="edit-salary">Salary *</Label>
@@ -1242,26 +1311,32 @@ export default function Employees() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-panNumber">PAN Number</Label>
+                    <Label htmlFor="edit-panNumber">PAN Number *</Label>
                     <Input
                       id="edit-panNumber"
                       value={formData.panNumber}
-                      onChange={(e) => setFormData({ ...formData, panNumber: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, panNumber: e.target.value.toUpperCase() })}
                       placeholder="ABCDE1234F"
+                      maxLength={10}
+                      required
                     />
+                    <p className="text-xs text-muted-foreground">Format: 10 alphanumeric characters (e.g., ABCDE1234F)</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-aadharNumber">Aadhar Number</Label>
+                    <Label htmlFor="edit-aadharNumber">Aadhar Number *</Label>
                     <Input
                       id="edit-aadharNumber"
                       value={formData.aadharNumber}
-                      onChange={(e) => setFormData({ ...formData, aadharNumber: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, aadharNumber: formatAadharNumber(e.target.value) })}
                       placeholder="1234 5678 9012"
+                      maxLength={14}
+                      required
                     />
+                    <p className="text-xs text-muted-foreground">Format: 12 digits with spaces (e.g., 1234 5678 9012)</p>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-documents">Upload Documents (PDF)</Label>
+                  <Label htmlFor="edit-documents">Upload Documents (PDF) *</Label>
                   <Input
                     id="edit-documents"
                     type="file"
@@ -1269,6 +1344,9 @@ export default function Employees() {
                     multiple
                     onChange={handleFileUpload}
                   />
+                  <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                    Note: Please upload at least one document - Aadhar card or PAN card (Required)
+                  </p>
                   {formData.documents.length > 0 && (
                     <div className="space-y-2 mt-2">
                       <p className="text-sm text-muted-foreground">Uploaded files ({formData.documents.length}):</p>
@@ -1342,12 +1420,6 @@ export default function Employees() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {selectedEmployee.role !== 'Admin' && selectedEmployee.department && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Department</p>
-                    <p className="text-sm font-medium">{selectedEmployee.department}</p>
-                  </div>
-                )}
                 <div>
                   <p className="text-xs text-muted-foreground">Contact</p>
                   <p className="text-sm font-medium">{selectedEmployee.contact}</p>
