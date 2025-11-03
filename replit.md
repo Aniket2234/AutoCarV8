@@ -20,6 +20,7 @@ The application follows a client-server architecture.
     - Customer and vehicle registration.
     - Multi-stage service visit tracking.
     - Inventory management with low stock alerts and Excel import/export.
+    - **Vehicle Compatibility Tracking**: Products can be assigned compatible vehicle brands/models via dropdown selection, with support for custom model entries. During vehicle registration, only compatible products are automatically displayed.
     - Employee management (attendance, leaves, task assignment).
     - Order processing with invoice generation and WhatsApp delivery.
     - Daily email reports.
