@@ -1184,49 +1184,6 @@ export default function CustomerRegistration() {
                     />
                   )}
 
-                  {compatibleProducts.length > 0 && (
-                    <div className="space-y-4">
-                      <div className="border-t pt-4">
-                        <h3 className="text-base font-semibold mb-2">
-                          Compatible Products for {selectedBrand} {selectedModel}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          These products are specifically compatible with your vehicle
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/10">
-                          {compatibleProducts.map((product) => (
-                            <div
-                              key={product._id}
-                              className="flex items-start space-x-3 p-3 border rounded-md bg-background hover:bg-muted/50 transition-colors"
-                            >
-                              <div className="flex-1">
-                                <p className="font-medium text-sm">{product.name}</p>
-                                <p className="text-xs text-muted-foreground">{product.brand} - {product.category}</p>
-                                {product.modelCompatibility && (
-                                  <p className="text-xs text-green-600 mt-1">
-                                    ✓ Compatible with: {product.modelCompatibility.map((c: string) => 
-                                      c.startsWith('Other:') ? c.replace('Other: ', 'Custom: ') : c
-                                    ).join(', ')}
-                                  </p>
-                                )}
-                                <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-sm font-semibold text-primary">
-                                    ₹{product.sellingPrice}
-                                  </span>
-                                  {product.stockQty > 0 ? (
-                                    <span className="text-xs text-green-600">In Stock</span>
-                                  ) : (
-                                    <span className="text-xs text-red-600">Out of Stock</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   <FormField
                     control={vehicleForm.control}
                     name="vehiclePhoto"
