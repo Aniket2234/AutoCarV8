@@ -665,6 +665,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/products/resolve-by-ids", requireAuth, async (req, res) => {
+    try {
+      const { productIds } = req.body;
+      
+      if (!Array.isArray(productIds)) {
+        return res.status(400).json({ error: "productIds must be an array" });
+      }
+
+      const { getPartById } = await import('@shared/vehicleData');
+      const resolvedProducts: any[] = [];
+      const notFoundIds: string[] = [];
+
+      for (const productId of productIds) {
+        let productData = null;
+        
+        try {
+          const dbProduct = await Product.findById(productId);
+          if (dbProduct) {
+            productData = {
+              id: dbProduct._id.toString(),
+              name: dbProduct.name,
+              category: dbProduct.category,
+              brand: dbProduct.brand,
+              price: dbProduct.sellingPrice,
+              warranty: dbProduct.warranty,
+              stockQty: dbProduct.stockQty,
+              source: 'database'
+            };
+          }
+        } catch (err) {
+        }
+
+        if (!productData) {
+          const predefinedPart = getPartById(productId);
+          if (predefinedPart) {
+            productData = {
+              id: predefinedPart.id,
+              name: predefinedPart.name,
+              category: predefinedPart.category,
+              price: predefinedPart.price,
+              warranty: undefined,
+              source: 'predefined'
+            };
+          }
+        }
+
+        if (productData) {
+          resolvedProducts.push(productData);
+        } else {
+          notFoundIds.push(productId);
+        }
+      }
+
+      res.json({ 
+        products: resolvedProducts,
+        notFound: notFoundIds
+      });
+    } catch (error) {
+      console.error('Error resolving product IDs:', error);
+      res.status(500).json({ error: "Failed to resolve product IDs" });
+    }
+  });
+
   app.post("/api/products/import", requireAuth, requirePermission('products', 'create'), async (req, res) => {
     try {
       const { products } = req.body;
@@ -1264,32 +1327,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ products: [] });
       }
 
-      // Get the selected part names from the vehicle
-      const { getPartById } = await import('@shared/vehicleData');
-      const partNames = vehicle.selectedParts
-        .map((partId: string) => {
-          const part = getPartById(partId);
-          console.log(`  🔹 Part ID "${partId}" -> Name: "${part?.name}"`);
-          return part?.name;
-        })
-        .filter(Boolean) as string[];
+      console.log('\n🔍 Looking up products by IDs from selectedParts');
+      console.log('Product IDs to fetch:', vehicle.selectedParts);
 
-      console.log('📝 Resolved Part Names:', partNames);
+      const mongoose = await import('mongoose');
+      const productIdsOnly = vehicle.selectedParts.filter((id: string) => {
+        try {
+          new mongoose.Types.ObjectId(id);
+          return true;
+        } catch {
+          return false;
+        }
+      });
 
-      if (partNames.length === 0) {
-        console.log('❌ No valid part names found');
-        console.log('========================================\n');
-        return res.json({ products: [] });
-      }
-
-      // Use EXACT, case-sensitive matching for product names
-      console.log('\n🔍 Using exact, case-sensitive name matching');
-      console.log('Looking for exact matches of:', partNames);
-
-      const products = await Product.find({
-        name: { $in: partNames },
+      const dbProducts = await Product.find({ 
+        _id: { $in: productIdsOnly },
         status: { $nin: ['discontinued'] }
       }).limit(20);
+
+      console.log('✅ Found', dbProducts.length, 'products from database');
+
+      const { getPartById } = await import('@shared/vehicleData');
+      const predefinedPartIds = vehicle.selectedParts.filter((id: string) => {
+        try {
+          new mongoose.Types.ObjectId(id);
+          return false;
+        } catch {
+          return true;
+        }
+      });
+
+      const predefinedProducts = predefinedPartIds
+        .map((partId: string) => {
+          const part = getPartById(partId);
+          console.log(`  🔹 Predefined Part ID "${partId}" -> Name: "${part?.name}"`);
+          return part;
+        })
+        .filter(Boolean);
+
+      console.log('✅ Found', predefinedProducts.length, 'predefined products');
+
+      const products = [
+        ...dbProducts,
+        ...predefinedProducts.map((p: any) => ({
+          _id: p.id,
+          name: p.name,
+          sellingPrice: p.price,
+          category: p.category,
+          warranty: undefined,
+          stockQty: 0
+        }))
+      ];
 
       console.log('✅ Found', products.length, 'products with exact name matches');
       console.log('Matched products:', products.map(p => p.name));

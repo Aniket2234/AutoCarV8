@@ -136,6 +136,29 @@ function CustomerVehicleCard({
   onDelete: (customerId: string) => void;
   onViewDetails: (customer: Customer) => void;
 }) {
+  const { data: productsData, isLoading: loadingProducts } = useQuery<{ 
+    products: Array<{ 
+      id: string; 
+      name: string; 
+      category: string; 
+      price: number; 
+      warranty?: string;
+      source: string;
+    }>;
+    notFound: string[];
+  }>({
+    queryKey: ['/api/products/resolve-by-ids', JSON.stringify(vehicle.selectedParts || [])],
+    enabled: !!(vehicle.selectedParts && vehicle.selectedParts.length > 0),
+    queryFn: async () => {
+      const response = await apiRequest('POST', '/api/products/resolve-by-ids', { productIds: vehicle.selectedParts });
+      return response.json();
+    }
+  });
+
+  const productMap = new Map(
+    productsData?.products.map((p: any) => [p.id, p]) || []
+  );
+
   return (
     <Card className="overflow-hidden border-2 border-orange-300 dark:border-orange-700" data-testid={`card-customer-vehicle-${customer.id}-${vehicle.id}`}>
       <CardContent className="p-0">
@@ -1072,14 +1095,19 @@ export default function CustomerRegistrationDashboard() {
                               {vehicle.selectedParts && vehicle.selectedParts.length > 0 && (
                                 <div>
                                   <span className="text-muted-foreground text-sm font-medium">Selected Parts & Warranty Status:</span>
-                                  <div className="space-y-2 mt-2">
-                                    {vehicle.selectedParts.map((partId, index) => {
-                                      const warrantyCard = vehicle.warrantyCards?.find(wc => wc.partId === partId);
-                                      const partInfo = getPartById(partId);
-                                      const partName = warrantyCard?.partName || partInfo?.name || partId;
-                                      const hasWarranty = !!warrantyCard;
-                                      
-                                      return (
+                                  {loadingProducts ? (
+                                    <div className="space-y-2 mt-2">
+                                      <div className="text-xs text-muted-foreground">Loading product details...</div>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-2 mt-2">
+                                      {vehicle.selectedParts.map((partId, index) => {
+                                        const warrantyCard = vehicle.warrantyCards?.find(wc => wc.partId === partId);
+                                        const productInfo = productMap.get(partId);
+                                        const partName = warrantyCard?.partName || productInfo?.name || partId;
+                                        const hasWarranty = !!warrantyCard;
+                                        
+                                        return (
                                         <div 
                                           key={index}
                                           className="flex items-center justify-between p-2 rounded-md border bg-muted/30"
@@ -1122,8 +1150,9 @@ export default function CustomerRegistrationDashboard() {
                                           )}
                                         </div>
                                       );
-                                    })}
-                                  </div>
+                                      })}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
