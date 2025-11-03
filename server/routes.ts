@@ -1353,7 +1353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stageTimestamps: visit.stageTimestamps
       });
       
-      // Validate base64 images if present (format and size check - limit to 15MB per image)
+      // Validate base64 images if present (format and size check - limit to 50MB per image)
       // Also allow existing images (non-base64 URLs) to pass through unchanged
       const validateImages = (images: string[]) => {
         if (!images || !Array.isArray(images)) return true;
@@ -1374,19 +1374,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const base64Content = img.replace(dataUriRegex, '');
           if (!base64Regex.test(base64Content)) return false;
           
-          // Check size (15MB limit)
+          // Check size (50MB limit)
           const sizeInMB = (base64Content.length * 0.75) / (1024 * 1024);
-          return sizeInMB <= 15;
+          return sizeInMB <= 50;
         });
       };
 
       if (req.body.beforeImages && !validateImages(req.body.beforeImages)) {
         console.log('❌ [SERVICE UPDATE] Invalid before images');
-        return res.status(400).json({ error: "Invalid before images: must be valid base64 image data (PNG, JPEG, GIF, WebP) under 15MB per image" });
+        return res.status(400).json({ error: "Invalid before images: must be valid base64 image data (PNG, JPEG, GIF, WebP) under 50MB per image" });
       }
       if (req.body.afterImages && !validateImages(req.body.afterImages)) {
         console.log('❌ [SERVICE UPDATE] Invalid after images');
-        return res.status(400).json({ error: "Invalid after images: must be valid base64 image data (PNG, JPEG, GIF, WebP) under 15MB per image" });
+        return res.status(400).json({ error: "Invalid after images: must be valid base64 image data (PNG, JPEG, GIF, WebP) under 50MB per image" });
       }
 
       // Store previous status for loyalty and notification logic
@@ -5053,9 +5053,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const fileSizeBytes = Math.ceil((base64Data.length * 3) / 4);
-      const maxSizeBytes = 5 * 1024 * 1024;
+      const maxSizeBytes = 50 * 1024 * 1024;
       if (fileSizeBytes > maxSizeBytes) {
-        return res.status(400).json({ error: "File size exceeds 5MB limit" });
+        return res.status(400).json({ error: "File size exceeds 50MB limit" });
       }
 
       const invoice = await Invoice.findById(req.params.id);
