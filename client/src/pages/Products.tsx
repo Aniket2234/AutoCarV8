@@ -744,7 +744,7 @@ export default function Products() {
                   if (brand === 'Other') {
                     updateModelCompat(index, 'Other: ');
                   } else {
-                    updateModelCompat(index, '');
+                    updateModelCompat(index, brand);
                   }
                 }}
               >
@@ -757,7 +757,7 @@ export default function Products() {
                       {brand.name}
                     </SelectItem>
                   ))}
-                  <SelectItem value="Other">Other (Custom)</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
               
